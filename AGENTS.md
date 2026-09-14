@@ -7,7 +7,7 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 - **Tên:** IconMaker
 - **Mục đích:** Xử lý ảnh/icon bằng Pillow (convert PNG→ICO, bo góc, tách sprite + OCR, build ICO chất lượng cao, đặt icon thư mục qua desktop.ini), giao diện **CustomTkinter** tab; kèm khung **Launcher C#** (template tray-clone cho app server khác, không dùng để chạy app này).
 - **Stack:** Python 3.13, Pillow, CustomTkinter, .NET / C# (launcher).
-- **Kiến trúc (plan 008):** `src/main.py` (entry) + `src/core/` (logic thuần, cấm import GUI) + `src/gui/` (chỉ hiển thị: main_window, base_tool, widgets, theme) + `src/tools/` (mỗi tool 1 tab + hàm `run_*` gọi core, đăng ký ở `registry.py`) + `assets/`. `input/` là đầu vào mặc định, `output/<tenTool>/` là đầu ra. Plan + trạng thái trong `.agents/README.md`.
+- **Kiến trúc (plan 008):** `src/main.py` (entry) + `src/core/` (share thuần: paths, file_utils, formats, exceptions, cấm import GUI) + `src/service/` (logic riêng từng tool: convert, image_ops, sprites, icons, foldericon) + `src/gui/` (chỉ hiển thị: main_window, base_tool, widgets, theme) + `src/tools/<tenTool>/` (mỗi tool 1 package: `controller.py` gọi service + `view.py` Tab, đăng ký ở `registry.py`) + `assets/`. `input/` là đầu vào mặc định, `output/<tenTool>/` là đầu ra. Plan + trạng thái trong `.agents/README.md`.
 
 ## Đường dẫn quan trọng
 
@@ -15,9 +15,10 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 | --- | --- |
 | `AGENTS.md` | Luật dành cho agent (file này) |
 | `src/main.py` | Entry point GUI (`pythonw src/main.py`) |
-| `src/core/` | Logic thuần, không phụ thuộc GUI (convert, image_ops, sprites, icons, foldericon, paths, ...) |
+| `src/core/` | Logic share thuần, không phụ thuộc GUI (paths, file_utils, formats, exceptions) |
+| `src/service/` | Logic riêng từng tool (convert, image_ops, sprites, icons, foldericon) |
 | `src/gui/` | Chỉ hiển thị (main_window, base_tool, widgets, theme) |
-| `src/tools/` | Mỗi tool 1 tab + hàm `run_*`; đăng ký ở `registry.py` |
+| `src/tools/` | Mỗi tool 1 package `view.py` + `controller.py`; đăng ký ở `registry.py` |
 | `input/` | Đầu vào mặc định của tool khi gọi qua CLI |
 | `output/<tenTool>/` | Đầu ra của tool (convert, rounded, sprites, icons) |
 | `.agents/README.md` | Bảng chỉ dẫn của toàn bộ `.agents/` |
@@ -39,14 +40,14 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 9. **Agent cấm tạo file ngoài thư mục app.** Chỉ có code của chính app Python (được test bằng `tmp_path`) mới được ghi vào các vị trí bên ngoài (như thư viện icon). Agent không được dùng lệnh shell để tạo/sửa file rác ngoài `IconMaker/`; mọi thử nghiệm phải dùng fixture `tmp_path` hoặc tự dọn dẹp ngay sau khi chạy (kể cả artifact trong `~/` và các thuộc tính `attrib` đã đặt lên file thật).
 10. **GUI chạy bằng pythonw, không hiện console.** Mở GUI trực tiếp bằng `make gui` (`pythonw src/main.py`); launcher C# ưu tiên `pythonw`/`pyw` và đặt `CreateNoWindow=true`.
 11. **GUI dùng CustomTkinter, có nút đổi theme tối/sáng.** `customtkinter` khai báo trong `requirements.txt`; logic đổi theme nằm trong hàm thuần `next_theme()` để test được.
-12. **GUI chỉ là giao diện.** Mọi logic nằm trong `src/core/` (dùng chung, cấm import GUI) hoặc `src/tools/` (hàm `run_*`/`parse_*` cấp module của từng tab). Tab mới = thêm module trong `src/tools/` + 1 dòng trong `tools/registry.py`.
+12. **GUI chỉ là giao diện.** Mọi logic nằm trong `src/core/` (dùng chung, cấm import GUI) hoặc `src/service/` (riêng từng tool, gọi core) hoặc `src/tools/<tenTool>/controller.py` (glue `run_*`/`parse_*` gọi service, test được không cần GUI). View nằm ở `src/tools/<tenTool>/view.py` (Tab thuần hiển thị). Tab mới = thêm package trong `src/tools/` + 1 dòng trong `tools/registry.py`.
 13. **Launcher chỉ là template tray-clone, không dùng để chạy app này.** `launcher/` lưu khung `TrayDemo` để sau này sửa `AppConfig.cs` rồi build exe cho app server khác (Python/Node); chỉ sửa `AppConfig.cs` + `Assets/icon.ico` khi clone, csproj gen bằng `dotnet new winforms` rồi patch 2 dòng icon (không copy tay); app mới sinh bằng `launcher/new-launcher.ps1` (`make new-launcher NAME=...`). IconMaker chạy trực tiếp bằng `make gui` (`pythonw src/main.py`); không có `make run`.
 14. **Code trong src/, input/ vào — output/<tool> ra.** Mọi mã nguồn Python nằm trong `src/` (chạy từ gốc với `PYTHONPATH=src`; `pytest.ini` đã đặt sẵn). `input/` là đầu vào mặc định khi gọi tool qua CLI (bỏ trống tham số); thiếu input thì phải điền rõ như GUI. Mọi đầu ra của tool vào `output/<tenTool>/` (`core/paths.py` giữ hằng số); GUI prefill sẵn các đường dẫn này.
 15. **Tab Icon thư mục lấy ICO từ output/icons và cho đổi tên trước khi cài.** Dialog chọn ICO mở thẳng `output/icons` (prefill ICO mới nhất); ô "Tên mới" bỏ trống = giữ tên gốc, nhập vào thì chuẩn hoá qua `sanitize_icon_name` rồi mới `install_icon` vào thư viện `~/OneDrive/Pictures/Icon` trước khi ghi desktop.ini.
 
 ## Quy ước code
 
-- Python: mã nguồn trong `src/` (`core/` + `gui/` + `tools/` + `main.py`), test trong `tests/` (dùng pytest).
+- Python: mã nguồn trong `src/` (`core/` + `service/` + `gui/` + `tools/` + `main.py`), test trong `tests/` (dùng pytest).
 - Launcher C#: đặt trong `launcher/`.
 - Không thêm comment thừa. Viết code sạch, theo phong cách các file xung quanh.
 - Không import thư viện nào chưa khai báo trong `requirements.txt`.
@@ -65,6 +66,7 @@ Luật mới được thêm khi người dùng đưa ra quyết định (xem `.a
 - **2026-09-14 — L7:** GUI chạy bằng pythonw không hiện console; launcher ưu tiên pythonw/pyw (Luật 10).
 - **2026-09-14 — L8:** GUI dùng CustomTkinter, có nút đổi theme tối/sáng qua hàm thuần `next_theme()` (Luật 11).
 - **2026-09-14 — L9:** Tái cấu trúc core/gui/tools; GUI chỉ hiển thị, logic trong core/tools; tab mới = 1 module tools + 1 dòng registry (Luật 12).
+- **2026-09-14 — L9b:** Tách core share vs service riêng + tool thành package view/controller; core chỉ giữ share (paths, file_utils, formats, exceptions), logic riêng vào service/, controller glue gọi service, view thuần hiển thị (Luật 12).
 - **2026-09-14 — L10:** Launcher là template tray-clone độc lập (clone TrayDemo: chỉ sửa AppConfig.cs + icon, csproj từ dotnet new); sinh app mới bằng new-launcher.ps1 (Luật 13).
 - **2026-09-14 — L11:** Code Python vào `src/`, CLI mặc định `input/` → `output/<tenTool>/`, thiếu thì điền rõ như GUI (Luật 14).
 - **2026-09-14 — L12:** Launcher chỉ là template cho app server khác, không dùng để chạy IconMaker; bỏ `make run`, IconMaker chạy bằng `make gui` (Luật 13).

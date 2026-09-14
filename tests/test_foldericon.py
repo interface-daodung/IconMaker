@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from core import foldericon
-from core.foldericon import (
+from service import foldericon
+from service.foldericon import (
     install_icon,
     make_ini_content,
     sanitize_icon_name,

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from core import convert as converter
+from service import convert as converter
 
 
 def ico_frame_sizes(path: str | Path) -> set[tuple[int, int]]:

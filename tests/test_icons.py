@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from core import convert, icons
+from service import convert, icons
 from tests.test_converter import ico_frame_sizes
 
 

@@ -1,1 +1,1 @@
-"""Mỗi tool là một tab trong GUI: view (Tab) + hàm logic riêng gọi xuống core/."""
+"""Mỗi tool là 1 package: view (Tab) + controller (run_*/parse_*) gọi service/."""

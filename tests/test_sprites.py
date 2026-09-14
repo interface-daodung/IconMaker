@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PIL import Image
 
-from core import sprites
+from service import sprites
 
 
 def _canvas(w=200, h=200, shade=(0x12, 0x13, 0x15)):

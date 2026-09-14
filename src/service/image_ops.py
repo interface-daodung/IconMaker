@@ -82,7 +82,7 @@ def round_image_file(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m core.image_ops [nguon] [dich] [--radius N]
+    """Entry point: python -m service.image_ops [nguon] [dich] [--radius N]
 
     Mặc định: nguồn = ảnh đầu tiên trong input/,
     đích = output/rounded/<tên>-rounded.png.
@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         del args[idx : idx + 2]
     if len(args) > 2:
-        print("Dùng: python -m core.image_ops [nguon] [dich] [--radius N]")
+        print("Dùng: python -m service.image_ops [nguon] [dich] [--radius N]")
         return 2
     if args:
         source = args[0]

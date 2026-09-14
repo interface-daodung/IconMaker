@@ -4,8 +4,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from core import convert, foldericon, icons, sprites
 from core.file_utils import first_image, newest_file
+from service import convert, foldericon, icons, sprites
 from core.paths import (
     APP_ICON,
     INPUT_DIR,

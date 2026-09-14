@@ -1,14 +1,36 @@
-# Plan 008 — Tái cấu trúc MVP (core / gui / tools)
+# Plan 008 — Tái cấu trúc MVP (core / service / gui / tools)
 
 **Trạng thái:** ✅ Hoàn thành (2026-09-14). 87/87 test pass. GUI 5 tab + launcher đã kiểm chứng chạy thật.
 **Bổ sung 2026-09-14 — layout src/ + output/ (95/95 test pass):** toàn bộ code
 vào `src/`, CLI mặc định `input/` → `output/<tenTool>/` (xem "Layout src/" dưới).
+**Bổ sung 2026-09-14 — tách service + tools package (117/117 test pass):**
+`core/` chỉ giữ share, logic riêng dời sang `service/`, mỗi tool thành
+package `view.py` + `controller.py` (xem "Layout mới" dưới).
 
 ## Mục tiêu
 
-- GUI chỉ là giao diện: mọi logic nằm trong `core/` (dùng chung) và `tools/` (riêng từng tab).
-- Thêm tool bo góc ảnh → PNG (`core.image_ops` + tab "Bo góc").
+- GUI chỉ là giao diện: mọi logic nằm trong `core/` (share) + `service/` (riêng từng tool) + `tools/*/controller.py` (glue gọi service).
+- Thêm tool bo góc ảnh → PNG (`service.image_ops` + tab "Bo góc").
 - Đưa toàn bộ tính năng hiện có vào GUI dạng tab.
+
+## Layout mới (2026-09-14 — tách service + tools package, `git mv` giữ history)
+
+```
+src/
+  main.py                  # entry: pythonw src/main.py
+  core/                    # share thuần, KHÔNG import GUI: paths, file_utils, formats, exceptions
+  service/                 # logic riêng từng tool: convert, image_ops, sprites, icons, foldericon (+ CLI main)
+  gui/                     # chỉ hiển thị: main_window, base_tool, widgets, theme
+  tools/<tenTool>/         # mỗi tool 1 package: __init__ re-export + controller.py (run_*/parse_*) + view.py (Tab)
+    convert_tool/ rounded_tool/ sprites_tool/ icons_tool/ foldericon_tool/
+    registry.py            # get_tools() — thứ tự tab
+```
+
+- `controller.py` cấm import GUI/customtkinter, chỉ parse input + gọi `service/`
+  → test được không cần mở cửa sổ (`tools.*.controller`).
+- `view.py` (Tab) chỉ hiển thị, gọi `controller.*` + `core.paths` prefill.
+- `service/` được gọi qua CLI `python -m service.*`, `Makefile` đã chuyển từ `core.*` sang.
+- `__init__.py` mỗi tool re-export `Tab` + hàm controller để `registry.py` và code cũ vẫn chạy.
 
 ## Layout src/ (2026-09-14 — thay layout gốc, `git mv` giữ history)
 
@@ -58,14 +80,14 @@ assets/icons|styles/     # tài nguyên tĩnh (hiện chỉ có README giữ ch�
 
 ## Quy ước
 
-- `core/` không được import `gui`/`tools`/`customtkinter`.
-- Tab mới = thêm module trong `tools/` + 1 dòng trong `registry.get_tools()`.
-- Hàm dễ hỏng của tool đặt ở cấp module (`run_*`, `parse_*`) để test không cần mở cửa sổ.
-- Plan 001–007 mô tả đúng hành vi từng tính năng; đường dẫn `src/iconmaker/*` trong đó đọc thành `core/*`, GUI (plan 002) đọc thành `gui/` + `tools/`.
+- `core/` + `service/` không được import `gui`/`tools`/`customtkinter`.
+- Tab mới = thêm package trong `src/tools/<tenTool>/` (`controller.py` + `view.py` + `__init__.py` re-export) + 1 dòng trong `registry.get_tools()`.
+- Hàm dễ hỏng của tool đặt trong `controller.py` (`run_*`, `parse_*`) để test không cần mở cửa sổ.
+- Plan 001–007 mô tả đúng hành vi từng tính năng; đường dẫn `src/iconmaker/*` trong đó đọc thành `service/*` (riêng) hoặc `core/*` (share), GUI (plan 002) đọc thành `gui/` + `tools/*/view.py`.
 
 ## Ghi chú triển khai
 
 - Bo góc bằng Pillow (`rounded_rectangle` mask + `ImageChops.darker` giữ alpha gốc), không cần scipy.
-- `make rounded RSRC=... RDEST=... RADIUS=...` gọi `python -m core.image_ops`
+- `make rounded RSRC=... RDEST=... RADIUS=...` gọi `python -m service.image_ops`
   (PYTHONPATH=src do Makefile export; bỏ trống RSRC/RDEST = dùng input/ → output/rounded/).
 - Launcher dò `src/main.py`, chạy `pythonw src/main.py`.

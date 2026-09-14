@@ -1,6 +1,6 @@
 # IconMaker — các quy trình (pipeline). Chạy `make help` để xem danh sách.
 #
-# Layout: src/ (main.py + core/ + gui/ + tools/) — mọi lệnh python chạy từ
+# Layout: src/ (main.py + core/ + service/ + gui/ + tools/) — mọi lệnh python chạy từ
 # thư mục gốc với PYTHONPATH=src (export bên dưới).
 # input/ là đầu vào mặc định của tool; output/<tenTool>/ là đầu ra.
 #
@@ -35,28 +35,28 @@ test:
 	python -m pytest
 
 sprites:
-	python -m core.sprites $(INPUT_DIR) $(SPRITES)
+	python -m service.sprites $(INPUT_DIR) $(SPRITES)
 
 icons:
-	python -m core.icons $(SPRITES) $(ICONS)
+	python -m service.icons $(SPRITES) $(ICONS)
 
 SRC ?=
 DEST ?= $(ICONS)/manual.ico
 ico:
-	python -m core.convert "$(SRC)" "$(DEST)"
+	python -m service.convert "$(SRC)" "$(DEST)"
 
 RSRC ?=
 RDEST ?=
 RADIUS ?= 64
 rounded:
-	python -m core.image_ops "$(RSRC)" "$(RDEST)" --radius $(RADIUS)
+	python -m service.image_ops "$(RSRC)" "$(RDEST)" --radius $(RADIUS)
 
 ICON ?=
 FOLDER ?= .
 NAME ?=
 STORE ?=
 foldericon:
-	python -m core.foldericon "$(ICON)" "$(FOLDER)" $(if $(strip $(STORE)),--store "$(STORE)") $(if $(strip $(NAME)),--name "$(NAME)")
+	python -m service.foldericon "$(ICON)" "$(FOLDER)" $(if $(strip $(STORE)),--store "$(STORE)") $(if $(strip $(NAME)),--name "$(NAME)")
 
 launcher:
 	dotnet build $(LAUNCHER) -c Release

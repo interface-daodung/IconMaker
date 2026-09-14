@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from core import convert, foldericon
 from core.file_utils import resolve_output_path
 from gui.base_tool import ToolTab
 from gui.theme import next_theme
+from service import convert, foldericon
 from tools import registry
-from tools.convert_tool import parse_sizes, run_conversion
-from tools.foldericon_tool import parse_new_name, run_apply
-from tools.rounded_tool import parse_radius, run_round
+from tools.convert_tool.controller import parse_sizes, run_conversion
+from tools.foldericon_tool.controller import parse_new_name, run_apply
+from tools.rounded_tool.controller import parse_radius, run_round
 
 
 def test_parse_sizes_all_returns_default_sizes():

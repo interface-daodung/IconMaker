@@ -96,7 +96,7 @@ def convert_png_to_ico(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point dòng lệnh: python -m core.convert [nguon.png] [dich.ico] [sizes...]
+    """Entry point dòng lệnh: python -m service.convert [nguon.png] [dich.ico] [sizes...]
 
     Mặc định: nguồn = PNG đầu tiên trong input/, đích = output/convert/<tên>.ico.
     """

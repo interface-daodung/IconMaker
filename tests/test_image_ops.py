@@ -1,12 +1,12 @@
-"""Test bo góc ảnh ở core.image_ops (pixel thật, không mở GUI)."""
+"""Test bo góc ảnh ở service.image_ops (pixel thật, không mở GUI)."""
 
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
-from core import image_ops
 from core.exceptions import BadImageError, BadSizeError, MissingFileError
+from service import image_ops
 
 
 def _solid(path: Path, size=(100, 60), mode="RGBA") -> str:

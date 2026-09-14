@@ -146,7 +146,7 @@ def set_folder_icon(folder_path: str | Path, icon_path: str | Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m core.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]"""
+    """Entry point: python -m service.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]"""
     from core.file_utils import newest_file
     from core.paths import OUTPUT_ICONS
 
@@ -181,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         icon_arg, folder = str(latest), args[0]
     else:
-        print("Dùng: python -m core.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]")
+        print("Dùng: python -m service.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]")
         return 2
     try:
         installed = install_icon(icon_arg, store, new_name)

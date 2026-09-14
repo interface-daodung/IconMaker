@@ -14,7 +14,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from core.convert import validate_sizes
+from service.convert import validate_sizes
 
 
 def pad_to_square(img: Image.Image) -> Image.Image:

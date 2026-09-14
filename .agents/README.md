@@ -64,10 +64,10 @@ pip install -r requirements.txt
 $env:PYTHONPATH = "src"
 python -m pytest                                  # test
 pythonw src/main.py                               # GUI
-python -m core.convert                            # CLI convert: input/ -> output/convert/
-python -m core.image_ops --radius 64              # CLI bo goc: input/ -> output/rounded/
-python -m core.sprites                            # tach sprite: input/ -> output/sprites/
-python -m core.icons                              # build ICO: output/sprites/ -> output/icons/
-python -m core.foldericon C:\path\thu-muc         # đặt icon thư mục (ICO mới nhất output/icons/)
+python -m service.convert                        # CLI convert: input/ -> output/convert/
+python -m service.image_ops --radius 64          # CLI bo goc: input/ -> output/rounded/
+python -m service.sprites                        # tach sprite: input/ -> output/sprites/
+python -m service.icons                          # build ICO: output/sprites/ -> output/icons/
+python -m service.foldericon C:\path\thu-muc     # đặt icon thư mục (ICO mới nhất output/icons/)
 dotnet build launcher/IconMakerLauncher -c Release                # build khung launcher (template)
 ```

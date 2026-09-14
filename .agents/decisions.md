@@ -83,5 +83,10 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
 
 ## 2026-09-14 (foldericon: nguồn output/icons + đổi tên)
 
-- **[D23] Tab Icon thư mục chọn ICO từ output/icons + đổi tên trước khi lưu:** FileRow hỗ trợ `initialdir`, tab prefill ICO mới nhất trong `output/icons` (dialog mở thẳng thư mục này thay vì folder ngẫu nhiên); thêm ô "Tên mới" (bỏ trống = giữ tên gốc), chuẩn hoá qua `core.foldericon.sanitize_icon_name` rồi `install_icon(..., new_name)` vào thư viện `~/OneDrive/Pictures/Icon` trước khi ghi desktop.ini; CLI `python -m core.foldericon ... [--name <ten>]`, `make foldericon NAME=... STORE=...`.
+- **[D23] Tab Icon thư mục chọn ICO từ output/icons + đổi tên trước khi lưu:** FileRow hỗ trợ `initialdir`, tab prefill ICO mới nhất trong `output/icons` (dialog mở thẳng thư mục này thay vì folder ngẫu nhiên); thêm ô "Tên mới" (bỏ trống = giữ tên gốc), chuẩn hoá qua `service.foldericon.sanitize_icon_name` rồi `install_icon(..., new_name)` vào thư viện `~/OneDrive/Pictures/Icon` trước khi ghi desktop.ini; CLI `python -m service.foldericon ... [--name <ten>]`, `make foldericon NAME=... STORE=...`.
   → Luật 15 (`AGENTS.md`); plan `007-folder-icon.md` mục bổ sung.
+
+## 2026-09-14 (tách tools view/controller + service riêng)
+
+- **[D24] Mỗi tool là package view+controller, logic riêng vào service/:** `core/` chỉ giữ share (paths, file_utils, formats, exceptions, cấm import GUI); logic riêng từng tool dời từ `core/` sang `service/` (convert, image_ops, sprites, icons, foldericon, CLI `python -m service.*`); mỗi tool tách thành `src/tools/<tenTool>/{__init__.py, controller.py (run_*/parse_* gọi service), view.py (Tab thuần hiển thị)}`, giữ `__init__.py` re-export để tương thích; `registry.py` giữ nguyên nhờ re-export; test chuyển sang `service.*` + `tools.*.controller`; `Makefile` gọi `service.*`.
+  → Luật 12 (`AGENTS.md` L9b); plan `008-mvp-restructure.md` mục bổ sung.
