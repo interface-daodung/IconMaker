@@ -30,6 +30,7 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 6. **Cập nhật plan.** Sau khi hoàn thành một phần việc, cập nhật trạng thái vào plan tương ứng (đánh dấu `✅`, thêm ghi chú) để agent tiếp theo nắm được tình hình.
 7. **Makefile là lối vào của mọi quy trình.** Khi thêm/thay đổi script hoặc entry point, phải cập nhật `Makefile` trong cùng lần thay đổi, và chạy target liên quan để kiểm chứng.
 8. **Icon trỏ từ desktop.ini phải nằm ngoài app.** Trước khi ghi `desktop.ini`, icon `.ico` bắt buộc được copy vào thư viện icon ổn định của user (`~/OneDrive/Pictures/Icon`) bằng `foldericon.install_icon` — không bao giờ trỏ thẳng vào thư mục app, vì di chuyển app sẽ hỏng icon.
+9. **Agent cấm tạo file ngoài thư mục app.** Chỉ có code của chính app Python (được test bằng `tmp_path`) mới được ghi vào các vị trí bên ngoài (như thư viện icon). Agent không được dùng lệnh shell để tạo/sửa file rác ngoài `IconMaker/`; mọi thử nghiệm phải dùng fixture `tmp_path` hoặc tự dọn dẹp ngay sau khi chạy (kể cả artifact trong `~/` và các thuộc tính `attrib` đã đặt lên file thật).
 
 ## Quy ước code
 
@@ -48,3 +49,4 @@ Luật mới được thêm khi người dùng đưa ra quyết định (xem `.a
 - **2026-09-13 — L3:** Mọi quyết định của người dùng phải được ghi thành luật + vào decision log (Luật 4).
 - **2026-09-14 — L4:** Makefile là lối vào của mọi pipeline; cập nhật Makefile cùng lần thay đổi entry point (Luật 7).
 - **2026-09-14 — L5:** Icon dùng cho desktop.ini phải copy vào thư viện icon ổn định của user trước (Luật 8).
+- **2026-09-14 — L6:** Agent không được tạo file bên ngoài thư mục app; chỉ code app (test qua tmp_path) mới được ghi ra ngoài, agent phải tự dọn mọi artifact (Luật 9).

@@ -50,3 +50,5 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
   → Luật 7 (`AGENTS.md`).
 - **[D14] Tính năng đổi icon thư mục:** GUI cho chọn 1 file ICO + 1 thư mục rồi ghi `desktop.ini` ẩn (`attrib +h +s`, folder `+r`, `ie4uinit -show`). Icon bắt buộc copy vào `C:\Users\inter\OneDrive\Pictures\Icon` trước khi trỏ tới, để di chuyển app không hỏng icon.
   → Luật 8 (`AGENTS.md`); module `src/iconmaker/foldericon.py`; plan `007-folder-icon.md`.
+- **[D15] Cấm agent tạo file ngoài app:** Phát hiện rác `C:\Users\inter\icon_check.txt` do agent previous loop ghi tay ra `~/` khi kiểm tra. Chỉ code app (test bằng `tmp_path`) mới được ghi ra ngoài; agent thử nghiệm xong phải tự dọn (cả artifact lẫn thuộc tính attrib).
+  → Luật 9 (`AGENTS.md`).
