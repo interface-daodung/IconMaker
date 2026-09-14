@@ -92,7 +92,16 @@ def test_image_ops_cli_main(tmp_path, capsys):
     src = _solid(tmp_path / "cli.png")
     assert image_ops.main([src, str(tmp_path / "cli-out.png"), "--radius", "12"]) == 0
     assert (tmp_path / "cli-out.png").is_file()
-    assert image_ops.main([]) == 2
     assert image_ops.main([src, "--radius", "abc"]) == 2
     assert image_ops.main([str(tmp_path / "missing.png")]) == 1
+    capsys.readouterr()
+
+
+def test_image_ops_cli_defaults_to_input_output_dirs(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    assert image_ops.main([]) == 1  # input/ trống -> lỗi, không đoán mò
+    (tmp_path / "input").mkdir()
+    _solid(tmp_path / "input" / "a.png")
+    assert image_ops.main([]) == 0
+    assert (tmp_path / "output" / "rounded" / "a-rounded.png").is_file()
     capsys.readouterr()

@@ -10,7 +10,7 @@ from gui.base_tool import ToolTab
 from gui.theme import next_theme
 from tools import registry
 from tools.convert_tool import parse_sizes, run_conversion
-from tools.foldericon_tool import run_apply
+from tools.foldericon_tool import parse_new_name, run_apply
 from tools.rounded_tool import parse_radius, run_round
 
 
@@ -60,6 +60,35 @@ def test_run_apply_chains_install_then_set(tmp_path, monkeypatch):
         ("install", "raw.ico"),
         ("set", "some_folder", tmp_path / "store" / "x.ico"),
     ]
+
+
+def test_parse_new_name_blank_means_keep_original():
+    assert parse_new_name(None) is None
+    assert parse_new_name("") is None
+    assert parse_new_name("   ") is None
+    assert parse_new_name("MyApp") == "MyApp.ico"
+
+
+def test_parse_new_name_invalid_raises():
+    with pytest.raises(ValueError):
+        parse_new_name("a/b")
+
+
+def test_run_apply_forwards_new_name(tmp_path, monkeypatch):
+    seen: dict = {}
+    monkeypatch.setattr(
+        foldericon,
+        "install_icon",
+        lambda icon, store=None, new_name=None: seen.update(
+            icon=icon, store=store, new_name=new_name
+        )
+        or tmp_path / "store" / "MyApp.ico",
+    )
+    monkeypatch.setattr(
+        foldericon, "set_folder_icon", lambda folder, installed: "ini-path"
+    )
+    assert run_apply("raw.ico", "some_folder", "MyApp") == "ini-path"
+    assert seen == {"icon": "raw.ico", "store": None, "new_name": "MyApp.ico"}
 
 
 def test_parse_radius_ok_and_clamped():

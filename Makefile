@@ -1,28 +1,30 @@
 # IconMaker — các quy trình (pipeline). Chạy `make help` để xem danh sách.
 #
-# Layout gốc: core/ (logic) + gui/ + tools/ + main.py — chạy trực tiếp từ
-# thư mục gốc, không cần PYTHONPATH.
+# Layout: src/ (main.py + core/ + gui/ + tools/) — mọi lệnh python chạy từ
+# thư mục gốc với PYTHONPATH=src (export bên dưới).
+# input/ là đầu vào mặc định của tool; output/<tenTool>/ là đầu ra.
 #
 # Trên Windows CMD/PowerShell, make sẽ dùng shell là cmd.
 
 ifeq ($(OS),Windows_NT)
-GUI_PYTHON = pythonw
-RM = rmdir /s /q
+    GUI_PYTHON = pythonw
+    RM = rmdir /s /q
 else
-GUI_PYTHON = python3
-RM = rm -rf
+    GUI_PYTHON = python3
+    RM = rm -rf
 endif
 
-INPUT_DIR  ?= input
-SPRITES    ?= sprites_out
-ICONS      ?= icon_out
-LAUNCHER   = launcher/IconMakerLauncher
-LAUNCHER_EXE = $(LAUNCHER)/bin/Release/net8.0-windows/IconMakerLauncher.exe
+export PYTHONPATH := src
 
-.PHONY: help all install test sprites icons ico rounded foldericon launcher new-launcher gui run clean
+INPUT_DIR  ?= input
+SPRITES    ?= output/sprites
+ICONS      ?= output/icons
+LAUNCHER   = launcher/IconMakerLauncher
+
+.PHONY: help all install test sprites icons ico rounded foldericon launcher new-launcher gui clean
 
 help:
-	@python -c "print('''IconMaker Makefile:\n  make all        install + test + sprites + icons\n  make install    cai Python deps (requirements.txt)\n  make test       chay toan bo pytest\n  make sprites    tach sprite: $(INPUT_DIR)/ -> $(SPRITES)/\n  make icons      build ICO chat luong cao: $(SPRITES)/ -> $(ICONS)/ (1 tang, phang)\n  make ico        convert truc tiep (SRC=...png DEST=...ico)\n  make rounded    bo goc anh (SRC=... DEST=... RADIUS=...)\n  make foldericon dat icon cho thu muc (ICON=...ico FOLDER=...)\n  make launcher   build launcher C# (can .NET 8+ SDK)\n  make new-launcher NAME=<TenApp> [ICON=...ico] sinh launcher moi theo khung tray-clone\n  make gui        mo GUI truc tiep bang pythonw (khong hien console)\n  make run        mo GUI qua launcher (launcher tu goi pythonw)\n  make clean      xoa sprites_out/ icon_out/ __pycache__ .pytest_cache (giu input/)''')"
+	@python -c "print('''IconMaker Makefile:\n  make all        install + test + sprites + icons\n  make install    cai Python deps (requirements.txt)\n  make test       chay toan bo pytest\n  make sprites    tach sprite: $(INPUT_DIR)/ -> $(SPRITES)/\n  make icons      build ICO chat luong cao: $(SPRITES)/ -> $(ICONS)/ (1 tang, phang)\n  make ico        convert truc tiep (SRC=...png DEST=...ico; bo trong = lay input/ -> output/convert/)\n  make rounded    bo goc anh (RSRC=... RDEST=... RADIUS=...; bo trong = lay input/ -> output/rounded/)\n  make foldericon dat icon cho thu muc (ICON=...ico FOLDER=... NAME=... STORE=...; bo ICON = lay ICO moi nhat output/icons/; bo NAME = giu ten goc)\n  make launcher   build launcher C# (can .NET 8+ SDK)\n  make new-launcher NAME=<TenApp> [ICON=...ico] sinh launcher moi theo khung tray-clone\n  make gui        mo GUI truc tiep bang pythonw (khong hien console)\n  make clean      xoa output/ __pycache__ .pytest_cache (giu input/)''')"
 
 all: install test sprites icons
 
@@ -38,21 +40,23 @@ sprites:
 icons:
 	python -m core.icons $(SPRITES) $(ICONS)
 
-SRC ?= input/0.png
+SRC ?=
 DEST ?= $(ICONS)/manual.ico
 ico:
 	python -m core.convert "$(SRC)" "$(DEST)"
 
-RSRC ?= input/0.png
-RDEST ?= $(ICONS)/rounded.png
+RSRC ?=
+RDEST ?=
 RADIUS ?= 64
 rounded:
 	python -m core.image_ops "$(RSRC)" "$(RDEST)" --radius $(RADIUS)
 
-ICON ?= $(ICONS)/manual.ico
+ICON ?=
 FOLDER ?= .
+NAME ?=
+STORE ?=
 foldericon:
-	python -m core.foldericon "$(ICON)" "$(FOLDER)"
+	python -m core.foldericon "$(ICON)" "$(FOLDER)" $(if $(strip $(STORE)),--store "$(STORE)") $(if $(strip $(NAME)),--name "$(NAME)")
 
 launcher:
 	dotnet build $(LAUNCHER) -c Release
@@ -63,11 +67,8 @@ new-launcher:
 	powershell -ExecutionPolicy Bypass -File launcher/new-launcher.ps1 -Name $(NAME) $(if $(ICON),-Icon $(ICON))
 
 gui:
-	$(GUI_PYTHON) main.py
-
-run: launcher
-	"$(LAUNCHER_EXE)"
+	$(GUI_PYTHON) src/main.py
 
 clean:
-	-$(RM) $(SPRITES) $(ICONS)
+	-$(RM) output
 	python -c "import shutil,glob,os; [shutil.rmtree(p,ignore_errors=True) for p in ['.pytest_cache']+glob.glob('**/__pycache__',recursive=True)]; [shutil.rmtree(d,ignore_errors=True) for d in ['$(LAUNCHER)/bin','$(LAUNCHER)/obj']]"

@@ -10,6 +10,7 @@ from PIL import Image
 
 from core import image_ops
 from core.formats import READABLE_IMAGE_EXTENSIONS
+from core.paths import OUTPUT_ROUNDED
 from gui.base_tool import ToolTab
 from gui.widgets import FileRow, ImagePreview
 
@@ -113,7 +114,7 @@ class Tab(ToolTab):
             return
         self.set_status("Đang bo góc...")
         try:
-            dest = run_round(source, radius=radius)
+            dest = run_round(source, radius=radius, out_dir=OUTPUT_ROUNDED)
         except (ValueError, FileNotFoundError, OSError) as exc:
             self.fail("Lỗi bo góc", exc)
             return

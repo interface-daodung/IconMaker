@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
+from core.paths import app_icon_path
 from gui import theme
 from tools import registry
 
@@ -14,10 +15,19 @@ class MainWindow(ctk.CTk):
         self.title("IconMaker")
         self.geometry("640x600")
         self.resizable(False, False)
+        self._apply_app_icon()
 
         self.theme_var = ctk.StringVar(value=ctk.get_appearance_mode())
         self._build_header()
         self._build_tabs()
+
+    def _apply_app_icon(self) -> None:
+        try:
+            icon = app_icon_path()
+            if icon.is_file():
+                self.iconbitmap(str(icon))
+        except Exception:
+            pass
 
     def _build_header(self) -> None:
         header = ctk.CTkFrame(self, fg_color="transparent")

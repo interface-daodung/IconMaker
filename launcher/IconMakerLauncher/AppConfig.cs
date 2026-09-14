@@ -10,7 +10,7 @@ namespace IconMakerLauncher;
 /// Quy ước riêng của khung này:
 /// - Port = 0 → bỏ qua mọi kiểm tra cổng (dùng cho app GUI như
 ///   IconMaker, vốn không mở cổng TCP nào).
-/// - ProjectDir = "" → tự dò thư mục app chứa main.py đi ngược
+/// - ProjectDir = "" → tự dò thư mục app chứa src/main.py đi ngược
 ///   từ thư mục exe (khi đóng gói chỉ cần đặt exe cạnh app).
 /// </summary>
 static class AppConfig
@@ -21,19 +21,19 @@ static class AppConfig
     public const string MutexName = "IconMakerLauncher_SingleInstance";
     public const string Description = "IconMaker tray launcher - chạy GUI pythonw, xem log, restart/kill từ tray";
 
-    // ===== Server (ở đây là GUI pythonw main.py) =====
-    public const string ProjectDir = "";                             // rỗng = tự dò thư mục chứa main.py
+    // ===== Server (ở đây là GUI pythonw src/main.py) =====
+    public const string ProjectDir = "";                             // rỗng = tự dò thư mục chứa src/main.py
     public const int Port = 0;                                       // 0 = không kiểm tra cổng (app GUI)
     public const string HostUrl = "";                                // không dùng cho app GUI
 
     // Lệnh chạy app (hidden, không hiện CMD; ưu tiên bản không console)
     public const string CommandFile = "pythonw";
-    public const string CommandArgs = "main.py";
-    public const string CommandLog = "pythonw main.py";              // hiện trong log
+    public const string CommandArgs = "src/main.py";
+    public const string CommandLog = "pythonw src/main.py";          // hiện trong log
 
     // Fallback khi pythonw không tìm thấy (tự dò pyw/py/python)
     public const string FallbackFile = "cmd.exe";
-    public const string FallbackArgs = "/c python main.py";
+    public const string FallbackArgs = "/c python src/main.py";
 
     // ===== UI =====
     public const string TrayTooltip = "IconMaker";

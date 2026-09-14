@@ -70,3 +70,18 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
 
 - **[D20] Launcher là template tray-clone độc lập, không phải phần của app:** `launcher/` theo khung `TrayDemo` (skill tray-clone) — mục đích là sinh file exe C# có gán icon + nối tới folder chứa app run server. Mọi giá trị gom vào `AppConfig.cs` (file duy nhất cần sửa khi clone) + `Assets/icon.ico`; csproj gen bằng `dotnet new winforms` rồi patch 2 dòng icon (không copy tay); `Port=0` + `ProjectDir=""` nghĩa là app GUI/tự dò root; sinh app mới bằng `launcher/new-launcher.ps1` (`make new-launcher NAME=...`).
   → Luật 13 (`AGENTS.md`); plan `003-csharp-launcher.md` viết lại theo khung.
+
+## 2026-09-14 (layout src/ + input/output mặc định)
+
+- **[D21] Code vào `src/`, CLI mặc định `input/` → `output/<tenTool>/`:** `git mv main.py+core+gui+tools` vào `src/` (giữ history, import không đổi, chạy bằng `PYTHONPATH=src`); `core/paths.py` giữ hằng số; bỏ trống tham số CLI thì lấy input mặc định (convert/rounded: ảnh đầu tiên `input/`; sprites: `input/` → `output/sprites/`; icons: `output/sprites/` → `output/icons/`; foldericon: ICO mới nhất `output/icons/`, thư mục đích bắt buộc); thiếu input thì điền rõ như GUI; GUI prefill sẵn; launcher C# dò `src/main.py`; `.gitignore` `output/` thay `sprites_out/`+`icon_out/`.
+  → Luật 14 (`AGENTS.md`); plan `008-mvp-restructure.md` mục "Layout src/".
+
+## 2026-09-14 (launcher template-only)
+
+- **[D22] Launcher chỉ là template, không dùng để chạy IconMaker:** `launcher/` giữ 1 bản khung tray-clone để sau này sửa config rồi build exe cho app server khác (Python/Node — chưa làm vội). IconMaker chạy trực tiếp bằng `make gui` (`pythonw src/main.py`); bỏ target `make run` vì vô nghĩa. Quyết định sau: chỉ đổi icon trên form (`iconbitmap`), bỏ hướng fix icon taskbar vì quá phức tạp.
+  → Luật 13 (`AGENTS.md`); `Makefile` bỏ `run` + `LAUNCHER_EXE`; plan `003-csharp-launcher.md`.
+
+## 2026-09-14 (foldericon: nguồn output/icons + đổi tên)
+
+- **[D23] Tab Icon thư mục chọn ICO từ output/icons + đổi tên trước khi lưu:** FileRow hỗ trợ `initialdir`, tab prefill ICO mới nhất trong `output/icons` (dialog mở thẳng thư mục này thay vì folder ngẫu nhiên); thêm ô "Tên mới" (bỏ trống = giữ tên gốc), chuẩn hoá qua `core.foldericon.sanitize_icon_name` rồi `install_icon(..., new_name)` vào thư viện `~/OneDrive/Pictures/Icon` trước khi ghi desktop.ini; CLI `python -m core.foldericon ... [--name <ten>]`, `make foldericon NAME=... STORE=...`.
+  → Luật 15 (`AGENTS.md`); plan `007-folder-icon.md` mục bổ sung.

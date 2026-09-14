@@ -2,6 +2,8 @@
 
 **Trạng thái:** ✅ Khung tray-clone (2026-09-14 — theo `TrayDemo`, chỉ sửa `AppConfig.cs` + icon khi sinh app mới).
 
+**2026-09-14 — Template-only:** `launcher/` chỉ là khung mẫu để sau này sửa config rồi build exe cho app server khác (Python/Node — chưa làm vội), **không dùng để chạy IconMaker** (IconMaker chạy trực tiếp bằng `make gui`). Target `make run` đã bỏ vì vô nghĩa.
+
 ## Khung tray-clone
 
 `launcher/` là template độc lập (không phải phần của app Python) để sinh
@@ -23,7 +25,7 @@ launcher/
 ```
 
 `IconMakerLauncher` trỏ về app IconMaker (`CommandFile=pythonw`,
-`CommandArgs=main.py`, `ProjectDir=""` → tự dò thư mục chứa `main.py`,
+`CommandArgs=src/main.py`, `ProjectDir=""` → tự dò thư mục chứa `src/main.py`,
 `Port=0` → không kiểm tra cổng). Logic dò python (`ICONMAKER_PYTHON` →
 `pythonw` → `pyw` → `py` → `python`, `CreateNoWindow=true`) giữ từ bản cũ,
 chuyển vào `ServerProcess.ResolveCommandFile()`.

@@ -9,6 +9,7 @@ import customtkinter as ctk
 
 from core import convert
 from core.file_utils import resolve_output_path
+from core.paths import OUTPUT_CONVERT
 from gui.base_tool import ToolTab
 from gui.widgets import FileRow
 
@@ -46,6 +47,7 @@ class Tab(ToolTab):
         self.row_out = FileRow(
             self, "Thư mục lưu:", mode="dir", dialog_title="Chọn thư mục lưu"
         )
+        self.row_out.set(str(OUTPUT_CONVERT))
         self.row_out.pack(fill="x", padx=10, pady=4)
 
         size_frame = ctk.CTkFrame(self, fg_color="transparent")

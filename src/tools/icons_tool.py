@@ -8,6 +8,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from core import icons
+from core.paths import OUTPUT_ICONS, OUTPUT_SPRITES
 from gui.base_tool import ToolTab
 from gui.widgets import FileRow
 
@@ -29,10 +30,12 @@ class Tab(ToolTab):
         self.row_in = FileRow(
             self, "Thư mục sprite:", mode="dir", dialog_title="Chọn thư mục sprite"
         )
+        self.row_in.set(str(OUTPUT_SPRITES))
         self.row_in.pack(fill="x", padx=10, pady=4)
         self.row_out = FileRow(
             self, "Thư mục ICO:", mode="dir", dialog_title="Chọn thư mục chứa ICO"
         )
+        self.row_out.set(str(OUTPUT_ICONS))
         self.row_out.pack(fill="x", padx=10, pady=4)
         ctk.CTkButton(self, text="Build ICO", command=self._run).pack(
             padx=10, pady=6, anchor="e"

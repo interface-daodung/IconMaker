@@ -1,6 +1,10 @@
 # Plan 007 — Đặt icon cho thư mục (desktop.ini)
 
 **Trạng thái:** ✅ Hoàn thành (2026-09-14) — quyết định [D13], [D14].
+Bổ sung 2026-09-14 [D23]: tab "Icon thư mục" mở dialog thẳng `output/icons`
+(prefill ICO mới nhất qua `newest_file`), thêm ô "Tên mới" (trống = giữ tên
+gốc) chuẩn hoá bằng `sanitize_icon_name` rồi `install_icon(..., new_name)`
+trước khi `set_folder_icon`; CLI thêm `--name`, `make foldericon NAME=... STORE=...
 
 ## Yêu cầu
 

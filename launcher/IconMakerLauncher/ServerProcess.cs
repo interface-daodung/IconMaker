@@ -22,7 +22,7 @@ sealed class ServerProcess : IDisposable
     }
 
     // Thư mục app: AppConfig.ProjectDir nếu tồn tại, ngược lại đi ngược
-    // từ thư mục exe tìm main.py (đặt exe cạnh app là chạy).
+    // từ thư mục exe tìm src/main.py (đặt exe cạnh app là chạy).
     private static string ResolveWorkingDirectory()
     {
         if (!string.IsNullOrWhiteSpace(AppConfig.ProjectDir) && Directory.Exists(AppConfig.ProjectDir))
@@ -49,7 +49,7 @@ sealed class ServerProcess : IDisposable
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "main.py")))
+            if (File.Exists(Path.Combine(dir.FullName, "src", "main.py")))
                 return dir.FullName;
             dir = dir.Parent;
         }

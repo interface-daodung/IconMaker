@@ -96,17 +96,37 @@ def convert_png_to_ico(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point dòng lệnh: python -m core.convert <nguon.png> <dich.ico> [sizes...]"""
+    """Entry point dòng lệnh: python -m core.convert [nguon.png] [dich.ico] [sizes...]
+
+    Mặc định: nguồn = PNG đầu tiên trong input/, đích = output/convert/<tên>.ico.
+    """
     import sys
 
-    args = sys.argv[1:] if argv is None else argv
-    if not 2 <= len(args) <= 8:
-        print(f"Dùng: {sys.argv[0]} <nguon.png> <dich.ico> [kích_thước...]")
-        print(f"Mặc định: {DEFAULT_SIZES}")
+    from core.file_utils import first_image
+    from core.formats import PNG_EXTENSIONS
+    from core.paths import INPUT_DIR, OUTPUT_CONVERT
+
+    args = [a for a in (sys.argv[1:] if argv is None else argv) if a]
+    if len(args) > 8:
+        print(f"Dùng: {sys.argv[0]} [nguon.png] [dich.ico] [kích_thước...]")
+        print(f"Mặc định: nguồn={INPUT_DIR}/*.png, đích={OUTPUT_CONVERT}/, sizes={DEFAULT_SIZES}")
         return 2
+    if args:
+        source = args[0]
+    else:
+        found = first_image(INPUT_DIR, PNG_EXTENSIONS)
+        if found is None:
+            print(
+                f"Lỗi: không có PNG nào trong {INPUT_DIR}"
+                " — đặt ảnh vào đó hoặc truyền <nguon.png>",
+                file=sys.stderr,
+            )
+            return 1
+        source = str(found)
+    dest = args[1] if len(args) >= 2 else str(OUTPUT_CONVERT / (Path(source).stem + ".ico"))
     try:
         sizes = [int(a) for a in args[2:]] or None
-        out = convert_png_to_ico(args[0], args[1], sizes)
+        out = convert_png_to_ico(source, dest, sizes)
     except (ValueError, FileNotFoundError) as exc:
         print(f"Lỗi: {exc}", file=sys.stderr)
         return 1

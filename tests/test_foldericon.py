@@ -8,6 +8,7 @@ from core import foldericon
 from core.foldericon import (
     install_icon,
     make_ini_content,
+    sanitize_icon_name,
     set_folder_icon,
 )
 
@@ -116,3 +117,47 @@ def test_set_folder_icon_overwrites_existing_ini(tmp_path):
     set_folder_icon(folder, icon)
     text = (folder / "desktop.ini").read_text(encoding="utf-8")
     assert "IconResource" in text and "old content" not in text
+
+
+def test_sanitize_icon_name_adds_ico_and_strips():
+    assert sanitize_icon_name("  MyApp ") == "MyApp.ico"
+    assert sanitize_icon_name("MyApp.ico") == "MyApp.ico"
+    assert sanitize_icon_name("MyApp.ICO") == "MyApp.ico"
+    assert sanitize_icon_name("trail.") == "trail.ico"
+
+
+@pytest.mark.parametrize("bad", ["", "   ", ".", "..", "a/b", "a\\b", "x:icon", 'q"w', "a*b", "a?b", "a|b", "a<b>", "pic.png"])
+def test_sanitize_icon_name_rejects_bad_names(bad):
+    with pytest.raises(ValueError):
+        sanitize_icon_name(bad)
+
+
+def test_install_icon_with_new_name_renames(tmp_path):
+    src = _write_ico(tmp_path / "a" / "logo.ico")
+    store = tmp_path / "store"
+    dest = install_icon(src, store, "MyApp")
+    assert dest == store / "MyApp.ico"
+    assert dest.read_bytes() == src.read_bytes()
+
+
+def test_install_icon_with_new_name_blank_keeps_original(tmp_path):
+    src = _write_ico(tmp_path / "a" / "logo.ico")
+    store = tmp_path / "store"
+    assert install_icon(src, store, "   ").name == "logo.ico"
+
+
+def test_install_icon_with_new_name_dedups_content(tmp_path):
+    src = _write_ico(tmp_path / "a" / "logo.ico")
+    store = tmp_path / "store"
+    first = install_icon(src, store, "MyApp")
+    second = install_icon(src, store, "MyApp")
+    assert first == second == store / "MyApp.ico"
+    assert list(store.iterdir()) == [first]
+
+
+def test_install_icon_with_new_name_clash_gets_suffix(tmp_path):
+    store = tmp_path / "store"
+    src1 = _write_ico(tmp_path / "a" / "one.ico", b"AAAA" + b"\x01" * 8)
+    src2 = _write_ico(tmp_path / "b" / "two.ico", b"AAAA" + b"\x02" * 8)
+    assert install_icon(src1, store, "Same").name == "Same.ico"
+    assert install_icon(src2, store, "Same").name == "Same (2).ico"

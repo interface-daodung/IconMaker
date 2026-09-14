@@ -16,6 +16,33 @@ from pathlib import Path
 
 INI_NAME = "desktop.ini"
 ICO_EXTENSIONS = {".ico"}
+_INVALID_NAME_CHARS = set('<>:"/\\|?*')
+
+
+def sanitize_icon_name(name: str | Path) -> str:
+    """Chuẩn hoá tên file .ico do user nhập, luôn có hậu tố .ico.
+
+    - Cắt khoảng trắng đầu/cuối, tự thêm `.ico` nếu thiếu.
+    - Từ chối tên rỗng, `.`, `..`, chứa ký tự cấm Windows hoặc
+      kết thúc bằng dấu chấm/khoảng trắng (Explorer cắt ngầm).
+    """
+    raw = str(name).strip()
+    if not raw:
+        raise ValueError("Tên icon mới không được để trống.")
+    candidate = Path(raw)
+    if candidate.name != raw or raw in (".", ".."):
+        raise ValueError(f"Tên icon không hợp lệ: {raw!r}")
+    stem = candidate.stem.strip().rstrip(".")
+    suffix = candidate.suffix.lower()
+    if suffix and suffix != ".ico":
+        raise ValueError(f"Tên icon phải có đuôi .ico, nhận được '{candidate.suffix}'")
+    if not stem or stem in (".", ".."):
+        raise ValueError(f"Tên icon không hợp lệ: {raw!r}")
+    if any(ch in _INVALID_NAME_CHARS for ch in stem):
+        raise ValueError(f"Tên icon chứa ký tự cấm <>:\"/\\|?*: {stem!r}")
+    if any(ord(ch) < 32 for ch in stem):
+        raise ValueError(f"Tên icon chứa ký tự điều khiển: {stem!r}")
+    return f"{stem}.ico"
 
 
 def icon_store_dir() -> Path:
@@ -38,11 +65,17 @@ def icon_store_dir() -> Path:
     return home / "Pictures" / "Icon"
 
 
-def install_icon(icon_path: str | Path, store_dir: str | Path | None = None) -> Path:
+def install_icon(
+    icon_path: str | Path,
+    store_dir: str | Path | None = None,
+    new_name: str | None = None,
+) -> Path:
     """Copy file .ico vào thư viện icon, trả về đường dẫn đích đã cài.
 
     - Trung dung voi ban ghi cua thu vien: tai dung file cu (khong nhan ban).
     - Cung ten khac noi dung: them hau to ` (n)` de hong va file da tro toi.
+    - `new_name` (tùy chọn): tên mới do user đặt, chuẩn hoá qua
+      `sanitize_icon_name` trước khi lưu (để trống/None = giữ tên gốc).
     """
     src = Path(icon_path)
     if not src.is_file():
@@ -53,7 +86,8 @@ def install_icon(icon_path: str | Path, store_dir: str | Path | None = None) -> 
     store.mkdir(parents=True, exist_ok=True)
 
     data = src.read_bytes()
-    base = store / src.name
+    filename = sanitize_icon_name(new_name) if new_name and str(new_name).strip() else src.name
+    base = store / filename
     n = 1
     while True:
         dest = base if n == 1 else base.with_name(f"{base.stem} ({n}){base.suffix}")
@@ -112,26 +146,46 @@ def set_folder_icon(folder_path: str | Path, icon_path: str | Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m iconmaker.foldericon <icon.ico> <thu_muc> [--store <dir>]"""
+    """Entry point: python -m core.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]"""
+    from core.file_utils import newest_file
+    from core.paths import OUTPUT_ICONS
+
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(errors="replace")
-    args = list(sys.argv[1:] if argv is None else argv)
+    args = [a for a in list(sys.argv[1:] if argv is None else argv) if a]
     store: str | None = None
-    if "--store" in args:
-        idx = args.index("--store")
-        if idx + 1 >= len(args):
-            print("Lỗi: --store cần đường dẫn kèm theo", file=sys.stderr)
-            return 2
-        store = args[idx + 1]
-        del args[idx : idx + 2]
-    if len(args) != 2:
-        print("Dùng: python -m iconmaker.foldericon <icon.ico> <thu_muc> [--store <dir>]")
+    new_name: str | None = None
+    for flag, slot in (("--store", "store"), ("--name", "new_name")):
+        if flag in args:
+            idx = args.index(flag)
+            if idx + 1 >= len(args):
+                print(f"Lỗi: {flag} cần giá trị kèm theo", file=sys.stderr)
+                return 2
+            if slot == "store":
+                store = args[idx + 1]
+            else:
+                new_name = args[idx + 1]
+            del args[idx : idx + 2]
+    if len(args) == 2:
+        icon_arg, folder = args
+    elif len(args) == 1:
+        latest = newest_file(OUTPUT_ICONS, ".ico")
+        if latest is None:
+            print(
+                f"Lỗi: chưa có ICO nào trong {OUTPUT_ICONS}"
+                " — chạy icons trước hoặc truyền <icon.ico>",
+                file=sys.stderr,
+            )
+            return 1
+        icon_arg, folder = str(latest), args[0]
+    else:
+        print("Dùng: python -m core.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]")
         return 2
     try:
-        installed = install_icon(args[0], store)
-        ini = set_folder_icon(args[1], installed)
+        installed = install_icon(icon_arg, store, new_name)
+        ini = set_folder_icon(folder, installed)
     except (ValueError, FileNotFoundError, RuntimeError, OSError) as exc:
         print(f"Lỗi: {exc}", file=sys.stderr)
         return 1

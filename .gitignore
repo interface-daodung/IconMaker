@@ -27,7 +27,6 @@ Thumbs.db
 # Output của app (icon sinh ra)
 iconmaker_out/
 
-# Dữ liệu người dùng & kết quả tách sprite
+# Dữ liệu người dùng & kết quả tool
 input/
-sprites_out/
-icon_out/
+output/

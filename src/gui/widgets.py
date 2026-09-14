@@ -18,11 +18,13 @@ class FileRow(ctk.CTkFrame):
         mode: str = "file",
         filetypes: list[tuple[str, str]] | None = None,
         dialog_title: str = "Chọn",
+        initialdir: str | None = None,
     ) -> None:
         super().__init__(master, fg_color="transparent")
         self._mode = mode
         self._filetypes = filetypes or [("All files", "*.*")]
         self._dialog_title = dialog_title
+        self._initialdir = initialdir
         self.var = ctk.StringVar()
 
         ctk.CTkLabel(self, text=label, width=90, anchor="w").pack(side="left")
@@ -35,10 +37,14 @@ class FileRow(ctk.CTkFrame):
 
     def _browse(self) -> None:
         if self._mode == "dir":
-            path = filedialog.askdirectory(title=self._dialog_title)
+            path = filedialog.askdirectory(
+                title=self._dialog_title, initialdir=self._initialdir
+            )
         else:
             path = filedialog.askopenfilename(
-                title=self._dialog_title, filetypes=self._filetypes
+                title=self._dialog_title,
+                filetypes=self._filetypes,
+                initialdir=self._initialdir,
             )
         if path:
             self.var.set(path)

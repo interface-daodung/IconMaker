@@ -4,6 +4,8 @@
 
 **2026-09-14 — CustomTkinter:** Viết lại GUI bằng `customtkinter` (thêm vào `requirements.txt`): `IconMakerApp(ctk.CTk)`, mặc định theme Dark, nút "Đổi sang Sáng/Tối" đảo `set_appearance_mode` qua hàm thuần `next_theme()` (có test). Chạy bằng `pythonw` (không console): `make gui`. Logic cũ (`parse_sizes`, `resolve_output_path`, `run_conversion`, `apply_folder_icon`) giữ nguyên chữ ký — test 8 pass, tổng 72/72 pass. Đã kiểm chứng: cửa sổ "IconMaker" hiện qua `pythonw` và qua launcher (process `pythonw3.13`).
 
+**2026-09-14 — Icon GUI:** `MainWindow` gán icon `assets/icons/IconMaker.ico` qua `iconbitmap()` trong `_apply_app_icon()` (bỏ qua lỗi nếu thiếu file để test headless không vỡ). Đường dẫn resolve tuyệt đối trong `core/paths.py::app_icon_path()` (neo theo vị trí file, đúng mọi cwd) + test `test_app_icon_resolves_to_repo_file`. Đồng bộ `launcher/.../Assets/icon.ico` từ cùng file để exe launcher cùng icon; build pass.
+
 ## Mục tiêu
 
 GUI đơn giản để người dùng: chọn ảnh PNG → chọn nơi lưu → bấm Convert → nhận file `.ico`.

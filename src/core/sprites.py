@@ -365,9 +365,11 @@ def process_file(
 def main(argv: list[str] | None = None) -> int:
     import sys
 
-    args = sys.argv[1:] if argv is None else argv
-    input_dir = Path(args[0]) if args else Path("input")
-    out_dir = Path(args[1]) if len(args) > 1 else Path("sprites_out")
+    from core.paths import INPUT_DIR, OUTPUT_SPRITES
+
+    args = [a for a in (sys.argv[1:] if argv is None else argv) if a]
+    input_dir = Path(args[0]) if args else INPUT_DIR
+    out_dir = Path(args[1]) if len(args) > 1 else OUTPUT_SPRITES
     files = sorted(f for f in input_dir.iterdir() if f.suffix.lower() == ".png")
     if not files:
         print(f"Không có file PNG nào trong {input_dir}", file=sys.stderr)

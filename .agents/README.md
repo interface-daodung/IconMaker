@@ -41,7 +41,7 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | Sprite splitter (nền đen + OCR) | 005 | ✅ (19 test sprites, tổng 51/51 pass) |
 | Icon chất lượng cao | 006 | ✅ (7 test icons, 58/58 pass) |
 | Đặt icon thư mục (desktop.ini) | 007 | ✅ (12 test foldericon + 1 test GUI, 71/71 pass) |
-| Tái cấu trúc MVP + bo góc | 008 | ✅ (layout core/gui/tools, GUI 5 tab, 87/87 pass) |
+| Tái cấu trúc MVP + bo góc | 008 | ✅ (layout src/, GUI 5 tab, input/ → output/<tool>/, 95/95 pass) |
 
 ## Cách chạy
 
@@ -51,24 +51,23 @@ Khuyến nghị dùng `make` (cài qua winget `ezwinports.make`):
 make all        # install + test + sprites + icons
 make test       # pytest
 make gui        # mo GUI truc tiep bang pythonw (khong console)
-make run        # build launcher + mo GUI qua launcher (tray)
 make new-launcher NAME=<TenApp>  # sinh launcher moi theo khung tray-clone
 make rounded RSRC=in.png RDEST=out.png RADIUS=64  # bo goc anh
 make foldericon ICON=... FOLDER=...   # đặt icon cho thư mục
 make help       # danh sách target
 ```
 
-Thủ công (không cần make — chạy từ thư mục gốc, không cần PYTHONPATH):
+Thủ công (không cần make — chạy từ thư mục gốc, đặt PYTHONPATH=src):
 
 ```powershell
 pip install -r requirements.txt
+$env:PYTHONPATH = "src"
 python -m pytest                                  # test
-pythonw main.py                                   # GUI
-python -m core.convert in.png out.ico             # CLI convert
-python -m core.image_ops in.png out.png --radius 64  # CLI bo goc
-python -m core.sprites input/ sprites_out/        # tach sprite
-python -m core.icons sprites_out/ icon_out/       # build ICO
-python -m core.foldericon x.ico C:\path\thu-muc   # đặt icon thư mục
-dotnet build launcher/IconMakerLauncher -c Release                # launcher
-launcher\IconMakerLauncher\bin\Release\net8.0-windows\IconMakerLauncher.exe  # chạy GUI qua launcher
+pythonw src/main.py                               # GUI
+python -m core.convert                            # CLI convert: input/ -> output/convert/
+python -m core.image_ops --radius 64              # CLI bo goc: input/ -> output/rounded/
+python -m core.sprites                            # tach sprite: input/ -> output/sprites/
+python -m core.icons                              # build ICO: output/sprites/ -> output/icons/
+python -m core.foldericon C:\path\thu-muc         # đặt icon thư mục (ICO mới nhất output/icons/)
+dotnet build launcher/IconMakerLauncher -c Release                # build khung launcher (template)
 ```

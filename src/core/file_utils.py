@@ -37,3 +37,21 @@ def iter_image_files(
     if not folder.is_dir():
         return []
     return sorted(p for p in folder.iterdir() if p.suffix.lower() in wanted)
+
+
+def first_image(
+    directory: str | Path, extensions: set[str] | None = None
+) -> Path | None:
+    """Ảnh đầu tiên (theo tên) trong `directory`, None nếu không có."""
+    files = iter_image_files(directory, extensions)
+    return files[0] if files else None
+
+
+def newest_file(directory: str | Path, extension: str) -> Path | None:
+    """File có phần mở rộng `extension` mới nhất trong `directory`."""
+    folder = Path(directory)
+    if not folder.is_dir():
+        return None
+    ext = extension.lower()
+    files = [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() == ext]
+    return max(files, key=lambda p: p.stat().st_mtime) if files else None

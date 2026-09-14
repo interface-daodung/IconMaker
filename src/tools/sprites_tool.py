@@ -10,6 +10,7 @@ import customtkinter as ctk
 from core import sprites
 from core.file_utils import iter_image_files
 from core.formats import PNG_EXTENSIONS
+from core.paths import INPUT_DIR, OUTPUT_SPRITES
 from gui.base_tool import ToolTab
 from gui.widgets import FileRow
 
@@ -35,10 +36,12 @@ class Tab(ToolTab):
         self.row_in = FileRow(
             self, "Thư mục vào:", mode="dir", dialog_title="Chọn thư mục chứa ảnh nền đen"
         )
+        self.row_in.set(str(INPUT_DIR))
         self.row_in.pack(fill="x", padx=10, pady=4)
         self.row_out = FileRow(
             self, "Thư mục ra:", mode="dir", dialog_title="Chọn thư mục chứa sprite"
         )
+        self.row_out.set(str(OUTPUT_SPRITES))
         self.row_out.pack(fill="x", padx=10, pady=4)
         ctk.CTkButton(self, text="Tách sprite", command=self._run).pack(
             padx=10, pady=6, anchor="e"
