@@ -14,7 +14,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from iconmaker import converter
+from core.convert import validate_sizes
 
 
 def pad_to_square(img: Image.Image) -> Image.Image:
@@ -32,7 +32,7 @@ def sprite_to_ico(
     sizes: list[int] | None = None,
 ) -> str:
     """Sprite -> file ICO với đủ các size, chất lượng cao, không biến dạng."""
-    resolved = converter.validate_sizes(sizes)
+    resolved = validate_sizes(sizes)
     with Image.open(source) as raw:
         master = pad_to_square(raw.convert("RGBA"))
     try:

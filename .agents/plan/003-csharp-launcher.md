@@ -1,6 +1,47 @@
 # Plan 003 — Launcher C# (.NET)
 
-**Trạng thái:** ✅ Đã triển khai + build & chạy được (2026-09-13).
+**Trạng thái:** ✅ Khung tray-clone (2026-09-14 — theo `TrayDemo`, chỉ sửa `AppConfig.cs` + icon khi sinh app mới).
+
+## Khung tray-clone
+
+`launcher/` là template độc lập (không phải phần của app Python) để sinh
+file exe C# gán icon + nối tới folder chứa app run server:
+
+```
+launcher/
+├── IconMakerLauncher/        # instance mẫu (đồng thời là nguồn khung)
+│   ├── AppConfig.cs          # FILE DUY NHẤT CẦN SỬA khi clone
+│   ├── ServerProcess.cs      # chạy process ẩn + gom log (Port=0 → bỏ qua check cổng)
+│   ├── TrayAppContext.cs     # tray icon + menu Open Log / Restart / Kill / Exit
+│   ├── ServerLogForm.cs      # cửa sổ log (đóng → ẩn, không kill)
+│   ├── NativeMethods.cs
+│   ├── Program.cs            # mutex single-instance + Application.Run
+│   ├── Assets/icon.ico       # placeholder — thay bằng icon build từ IconMaker
+│   ├── build.ps1             # build trước, chỉ publish khi build pass
+│   └── IconMakerLauncher.csproj  # dotnet-new-winforms + 2 dòng icon
+└── new-launcher.ps1          # script sinh app mới (xem dưới)
+```
+
+`IconMakerLauncher` trỏ về app IconMaker (`CommandFile=pythonw`,
+`CommandArgs=main.py`, `ProjectDir=""` → tự dò thư mục chứa `main.py`,
+`Port=0` → không kiểm tra cổng). Logic dò python (`ICONMAKER_PYTHON` →
+`pythonw` → `pyw` → `py` → `python`, `CreateNoWindow=true`) giữ từ bản cũ,
+chuyển vào `ServerProcess.ResolveCommandFile()`.
+
+## Sinh launcher mới
+
+```powershell
+powershell -ExecutionPolicy Bypass -File launcher/new-launcher.ps1 -Name <TenApp> [-Icon path\to.ico]
+# hoặc: make new-launcher NAME=<TenApp> [ICON=...ico]
+```
+
+Script tự làm theo skill tray-clone: `dotnet new winforms -n <TenApp>` →
+copy 6 file khung (kèm `Program.cs` để xóa phụ thuộc `Form1` của `dotnet new`)
++ đổi namespace → xóa `Form1.*` → patch csproj 2 dòng icon → copy
+`Assets/icon.ico` + `build.ps1`. Sau đó chỉ sửa 2 chỗ:
+
+1. `<TenApp>\AppConfig.cs` (AppName, ProjectDir, Port, CommandFile/Args, TrayTooltip, messages).
+2. Thay `<TenApp>\Assets\icon.ico` (VD icon build từ `make icons`).
 
 ## Build
 
@@ -9,13 +50,21 @@ dotnet build launcher/IconMakerLauncher/IconMakerLauncher.csproj -c Release
 dotnet publish ... -c Release -r win-x64 --self-contained false   # khi đóng gói
 ```
 
+Hoặc `Set-Location launcher/IconMakerLauncher; .\build.ps1` (framework mặc định;
+`-Mode standalone` để ra 1 file ~70MB chạy mọi máy).
+
 Yêu cầu .NET 8 SDK (máy đã cài qua winget — xem `decisions.md [D6]`).
 
 ## Ghi chú đã kiểm chứng
 
+- 2026-09-14 — khung tray-clone: `dotnet build launcher/IconMakerLauncher -c Release`
+  pass 0 warning; `new-launcher.ps1 -Name TmpTrayTest` + `dotnet build` pass
+  (namespace + 2 dòng icon tự patch đúng), đã xóa app thử sau kiểm chứng.
+  `pytest` 87/87 pass (không đụng code Python).
 - Launcher tự dò `py`/`python` (Windows Store Python có tên process `python3.13.exe` — không match theo tên `python.exe` khi kiểm tra tự động; xem `decisions.md [D7]`).
 - `FindAppRoot()` đi ngược từ thư mục exe đến folder chứa `src/iconmaker/gui.py`, chạy `python -m iconmaker.gui` với working directory = `src`.
 - Đã test end-to-end: chạy exe → GUI "IconMaker" hiện → đóng GUI → launcher thoát.
+- **2026-09-14 — pythonw:** `FindPython()` ưu tiên bản không console (`pythonw` → `pyw` → `py` → `python`; đã kiểm chứng `pythonw --version` exit 0 nên probe được), process GUI đặt `CreateNoWindow = true`. Đã test end-to-end: chạy exe → GUI "IconMaker" hiện dưới process `pythonw3.13` (không cửa sổ console) → kill sau kiểm chứng.
 
 ## Mục tiêu
 

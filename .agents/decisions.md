@@ -52,3 +52,21 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
   → Luật 8 (`AGENTS.md`); module `src/iconmaker/foldericon.py`; plan `007-folder-icon.md`.
 - **[D15] Cấm agent tạo file ngoài app:** Phát hiện rác `C:\Users\inter\icon_check.txt` do agent previous loop ghi tay ra `~/` khi kiểm tra. Chỉ code app (test bằng `tmp_path`) mới được ghi ra ngoài; agent thử nghiệm xong phải tự dọn (cả artifact lẫn thuộc tính attrib).
   → Luật 9 (`AGENTS.md`).
+
+## 2026-09-14 (gui pythonw + customtkinter)
+
+- **[D16] GUI chạy bằng pythonw (không hiện cửa sổ console):** Thêm target `make gui` (`GUI_PYTHON=pythonw` trên Windows, `python3` các OS khác); launcher C# dò `pythonw` → `pyw` → `py` → `python` và đặt `CreateNoWindow=true`.
+  → Luật 10 (`AGENTS.md`).
+- **[D17] GUI dùng CustomTkinter + nút đổi theme tối/sáng:** `IconMakerApp(ctk.CTk)`, mặc định Dark, nút "Đổi sang Sáng/Tối" qua hàm thuần `next_theme()`; thêm `customtkinter>=5.2` vào `requirements.txt`.
+  → Luật 11 (`AGENTS.md`).
+
+## 2026-09-14 (tái cấu trúc MVP + bo góc)
+
+- **[D18] Kiến trúc tham khảo, tự đặt tên theo tình huống, dùng CustomTkinter:** Layout gốc `main.py` + `core/` + `gui/` + `tools/` + `assets/` (xóa `src/iconmaker/`); GUI chỉ hiển thị, logic trong `core/`/`tools/`; tab mới = 1 module `tools/` + 1 dòng `registry.py`.
+  → Luật 12 (`AGENTS.md`); plan `008-mvp-restructure.md`.
+- **[D19] Bo góc bằng Pillow, không dùng scipy:** `core.image_ops` (mask `rounded_rectangle` + giữ alpha gốc), CLI `python -m core.image_ops`, target `make rounded`, tab "Bo góc" có xem trước Trước/Sau.
+
+## 2026-09-14 (launcher theo khung tray-clone)
+
+- **[D20] Launcher là template tray-clone độc lập, không phải phần của app:** `launcher/` theo khung `TrayDemo` (skill tray-clone) — mục đích là sinh file exe C# có gán icon + nối tới folder chứa app run server. Mọi giá trị gom vào `AppConfig.cs` (file duy nhất cần sửa khi clone) + `Assets/icon.ico`; csproj gen bằng `dotnet new winforms` rồi patch 2 dòng icon (không copy tay); `Port=0` + `ProjectDir=""` nghĩa là app GUI/tự dò root; sinh app mới bằng `launcher/new-launcher.ps1` (`make new-launcher NAME=...`).
+  → Luật 13 (`AGENTS.md`); plan `003-csharp-launcher.md` viết lại theo khung.

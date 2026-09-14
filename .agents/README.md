@@ -15,6 +15,7 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | `plan/005-sprite-splitter.md` | Tính năng tách sprite từ ảnh nền đen |
 | `plan/006-icon-quality.md` | Xuất icon `.ico` chất lượng cao từ sprites_out |
 | `plan/007-folder-icon.md` | Đặt icon cho thư mục Windows qua desktop.ini |
+| `plan/008-mvp-restructure.md` | Tái cấu trúc core/gui/tools + tool bo góc (thay layout `src/iconmaker/`) |
 | `decisions.md` | Nhật ký quyết định của người dùng |
 
 ## Cách dùng
@@ -35,11 +36,12 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | --- | --- | --- |
 | Core conversion (Pillow) | 001 | ✅ |
 | GUI (Tkinter) | 002 | ✅ |
-| Launcher (C#) | 003 | ✅ (build + chạy được) |
+| Launcher (C#) | 003 | ✅ (khung tray-clone: AppConfig.cs + new-launcher.ps1, build pass) |
 | Testing strategy | 004 | ✅ (32 test converter + 6 test logic GUI, pass 100%) |
 | Sprite splitter (nền đen + OCR) | 005 | ✅ (19 test sprites, tổng 51/51 pass) |
 | Icon chất lượng cao | 006 | ✅ (7 test icons, 58/58 pass) |
 | Đặt icon thư mục (desktop.ini) | 007 | ✅ (12 test foldericon + 1 test GUI, 71/71 pass) |
+| Tái cấu trúc MVP + bo góc | 008 | ✅ (layout core/gui/tools, GUI 5 tab, 87/87 pass) |
 
 ## Cách chạy
 
@@ -48,21 +50,25 @@ Khuyến nghị dùng `make` (cài qua winget `ezwinports.make`):
 ```powershell
 make all        # install + test + sprites + icons
 make test       # pytest
-make run        # build launcher + mở GUI
+make gui        # mo GUI truc tiep bang pythonw (khong console)
+make run        # build launcher + mo GUI qua launcher (tray)
+make new-launcher NAME=<TenApp>  # sinh launcher moi theo khung tray-clone
+make rounded RSRC=in.png RDEST=out.png RADIUS=64  # bo goc anh
 make foldericon ICON=... FOLDER=...   # đặt icon cho thư mục
 make help       # danh sách target
 ```
 
-Thủ công (không cần make):
+Thủ công (không cần make — chạy từ thư mục gốc, không cần PYTHONPATH):
 
 ```powershell
 pip install -r requirements.txt
 python -m pytest                                  # test
-$env:PYTHONPATH = "src"; python -m iconmaker.cli in.png out.ico   # CLI
-$env:PYTHONPATH = "src"; python -m iconmaker.gui                  # GUI
-$env:PYTHONPATH = "src"; python -m iconmaker.sprites              # input/ -> sprites_out/
-$env:PYTHONPATH = "src"; python -m iconmaker.icons                # sprites_out/ -> icon_out/
-$env:PYTHONPATH = "src"; python -m iconmaker.foldericon x.ico C:\path\thu-muc  # đặt icon thư mục
+pythonw main.py                                   # GUI
+python -m core.convert in.png out.ico             # CLI convert
+python -m core.image_ops in.png out.png --radius 64  # CLI bo goc
+python -m core.sprites input/ sprites_out/        # tach sprite
+python -m core.icons sprites_out/ icon_out/       # build ICO
+python -m core.foldericon x.ico C:\path\thu-muc   # đặt icon thư mục
 dotnet build launcher/IconMakerLauncher -c Release                # launcher
 launcher\IconMakerLauncher\bin\Release\net8.0-windows\IconMakerLauncher.exe  # chạy GUI qua launcher
 ```

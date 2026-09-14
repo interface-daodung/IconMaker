@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from iconmaker import foldericon
-from iconmaker.foldericon import (
+from core import foldericon
+from core.foldericon import (
     install_icon,
     make_ini_content,
     set_folder_icon,

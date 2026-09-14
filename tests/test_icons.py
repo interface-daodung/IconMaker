@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from iconmaker import icons
+from core import convert, icons
 from tests.test_converter import ico_frame_sizes
 
 
@@ -62,7 +62,7 @@ def test_default_sizes_when_none(tmp_path):
     _sprite(300, 300).save(p)
     ico = tmp_path / "s.ico"
     icons.sprite_to_ico(p, ico)
-    assert ico_frame_sizes(ico) == {(s, s) for s in icons.converter.get_default_sizes()}
+    assert ico_frame_sizes(ico) == {(s, s) for s in convert.get_default_sizes()}
 
 
 def test_build_from_sprites_flattens_with_sheet_prefix(tmp_path):
