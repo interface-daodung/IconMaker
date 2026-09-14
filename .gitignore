@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Visual Studio / .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Output của app (icon sinh ra)
+iconmaker_out/
+
+# Dữ liệu người dùng & kết quả tách sprite
+input/
+sprites_out/
+icon_out/

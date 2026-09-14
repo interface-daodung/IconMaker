@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "references": {
+    "agents": {
+      "path": ".agents",
+      "description": "Plans (plan/), decision log (decisions.md) and navigation (README.md) for the IconMaker project. Read before implementing."
+    }
+  }
+}

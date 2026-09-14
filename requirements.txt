@@ -1,0 +1,4 @@
+Pillow>=12.0
+pytest>=8.0
+# 1.3+ chưa hỗ trợ Python 3.13 (Requires-Python <3.13) — bản 1.2.3 đang chạy thật
+rapidocr-onnxruntime>=1.2,<1.4
