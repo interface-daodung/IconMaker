@@ -37,3 +37,22 @@ trước khi `set_folder_icon`; CLI thêm `--name`, `make foldericon NAME=... ST
   ghi đè ini cũ. 1 test chain GUI trong `test_gui_logic.py`. **71/71 pass.**
 - `make foldericon` trên thật: icon vào `C:\Users\inter\OneDrive\Pictures\Icon\`,
   `desktop.ini` đúng nội dung + đúng thuộc tính.
+
+## Bổ sung 2026-09-14 — tìm hàng loạt `*<tên>` (GUI)
+
+- Ô "Thư mục" gõ `*<tên>` (vd `*MyApp`) → hiện khung hàng loạt: nút **Tìm**,
+  1 checkbox cho mỗi ổ đĩa ngoài ổ home, list kết quả tick chọn từng dòng
+  (+ "Chọn hết"/"Bỏ hết"), nút "Đặt icon" áp dụng 1 lần cho mọi thư mục đã tick.
+- `src/service/folder_search.py`: `is_batch_input`/`parse_batch_name`
+  (khớp tên chính xác, case-insensitive); `find_folders_by_name` quét home
+  (`Path.home()`) + roots phụ, luôn cắt cây TEMP/TMP/AppData/LocalAppData,
+  cắt nhánh có phần bắt đầu `.` dưới home (ngoài home cho phép `.`),
+  bỏ qua thư mục ẩn/system (Windows), không follow symlink/junction;
+  `skip_dirs=None` = mặc định hệ thống, `[]` = tắt (cho test dưới %TEMP%).
+- `tools/foldericon_tool/controller.py`: `is_batch_input`, `parse_batch_name`,
+  `default_search_root`, `extra_drives`, `run_search`, `run_apply_many`
+  (cài icon 1 lần rồi đặt cho từng thư mục, trả về `(ok, {folder: lỗi})`).
+- Quét chạy trong thread nền để không treo GUI; batch là tính năng GUI,
+  CLI `python -m service.foldericon` giữ nguyên 1 thư mục.
+- 16 test `tests/test_folder_search.py` (parse, khớp chính xác, dot, skip
+  TEMP/AppData, apply_many cài 1 lần + gom lỗi).

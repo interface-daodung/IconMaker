@@ -90,3 +90,23 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
 
 - **[D24] Mỗi tool là package view+controller, logic riêng vào service/:** `core/` chỉ giữ share (paths, file_utils, formats, exceptions, cấm import GUI); logic riêng từng tool dời từ `core/` sang `service/` (convert, image_ops, sprites, icons, foldericon, CLI `python -m service.*`); mỗi tool tách thành `src/tools/<tenTool>/{__init__.py, controller.py (run_*/parse_* gọi service), view.py (Tab thuần hiển thị)}`, giữ `__init__.py` re-export để tương thích; `registry.py` giữ nguyên nhờ re-export; test chuyển sang `service.*` + `tools.*.controller`; `Makefile` gọi `service.*`.
   → Luật 12 (`AGENTS.md` L9b); plan `008-mvp-restructure.md` mục bổ sung.
+
+## 2026-09-14 (tool tạo junction point)
+
+- **[D25] Tool Junction tạo link ảo OneDrive → thư mục thật ở ổ mới:** `mklink /J "<ảo-trong-OneDrive>" "<thật-ở-ổ-mới>"` rồi `attrib +r "<ảo>" /l` để Explorer hiển thị icon tuỳ chỉnh; GUI nhập thư mục cha + tên mới (hoặc paste đường dẫn đủ), có checkbox tắt +r; CLI `python -m service.junction <ảo> <thật> [--no-readonly]`, `make junction JLINK=... JTARGET=... [JNO=1]`. Phát hiện khi kiểm chứng: `set_link_readonly` dùng `resolve()` sẽ đi xuyên reparse point và đặt +r nhầm vào thư mục thật — sửa thành `os.path.abspath` (không follow link), test kiểm tra bằng `os.lstat`.
+  → Luật 17 (`AGENTS.md`); plan `009-junction.md`.
+
+## 2026-09-14 (resize icon)
+
+- **[D25] Tool Resize icon:** Đầu vào 1 ảnh (png/jpg/webp), tạo 3 ảnh vuông 16x16/48x48/128x128 đặt tên `icon16`/`icon48`/`icon128`, đuôi mặc định `.png` có thể đổi (đuôi jpg/jpeg tự convert RGB khi lưu vì JPEG không hỗ trợ alpha). Output vào `output/resize/` (hằng số `OUTPUT_RESIZE` trong `core/paths.py`); tab "Resize icon" nằm giữa "Bo góc" và "Tách sprite"; có ô nhập đuôi file; CLI `python -m service.resize [nguon] [--ext .png]`, target `make resize RSRC=... EXT=.png`.
+  → Luật 7 (`AGENTS.md` — Makefile cập nhật target `resize`); tab mới theo Luật 12.
+
+## 2026-09-14 (đổi định dạng ảnh)
+
+- **[D26] Tool Đổi định dạng ảnh png/jpg/webp:** Đầu vào 1 ảnh (png/jpg/jpeg/webp), đầu ra chọn 1 trong 2 định dạng còn lại, cấm đổi trùng đuôi; `.jpeg` chuẩn hoá về `.jpg`. Output vào `output/convert_format/`. Khi đích là jpg/webp hiện thanh trượt "Chất lượng" mặc định 100% (1..100, thấp = nén mạnh) + preview ảnh sau nén bằng roundtrip encode→decode trong bộ nhớ (`compress_bytes`/`compressed_preview`) để thấy mất chi tiết thật; đích png lossless không nén. Tab "Đổi định dạng" đặt ngay sau "PNG → ICO". CLI `python -m service.format_convert [nguon] [--fmt .webp] [--quality 100]`, target `make convfmt FSRC=... FMT=... QUALITY=...`.
+  → Luật 17 (`AGENTS.md` — hợp đồng `service/format_convert.py`); Makefile target `convfmt`; tab mới theo Luật 12.
+
+## 2026-09-14 (icon thư mục hàng loạt)
+
+- **[D27] Tìm hàng loạt thư mục trùng tên bằng cú pháp `*<tên>`:** Gõ `*MyApp` ở ô Thư mục → nút Tìm quét `C:\Users\inter` khớp tên chính xác không phân biệt hoa/thường, checkbox quét thêm từng ổ đĩa khác, luôn bỏ qua %TEMP%/%AppData% và nhánh dot dưới home (ngoài home cho phép dot), hiện list tick chọn để đặt icon 1 lần cho các thư mục đã chọn.
+  → Luật 18 (`AGENTS.md`); module `src/service/folder_search.py`; plan `007-folder-icon.md` mục bổ sung.

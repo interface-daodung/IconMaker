@@ -21,10 +21,10 @@ SPRITES    ?= output/sprites
 ICONS      ?= output/icons
 LAUNCHER   = launcher/IconMakerLauncher
 
-.PHONY: help all install test sprites icons ico rounded foldericon launcher new-launcher gui clean
+.PHONY: help all install test sprites icons ico rounded resize convfmt foldericon junction launcher new-launcher gui clean
 
 help:
-	@python -c "print('''IconMaker Makefile:\n  make all        install + test + sprites + icons\n  make install    cai Python deps (requirements.txt)\n  make test       chay toan bo pytest\n  make sprites    tach sprite: $(INPUT_DIR)/ -> $(SPRITES)/\n  make icons      build ICO chat luong cao: $(SPRITES)/ -> $(ICONS)/ (1 tang, phang)\n  make ico        convert truc tiep (SRC=...png DEST=...ico; bo trong = lay input/ -> output/convert/)\n  make rounded    bo goc anh (RSRC=... RDEST=... RADIUS=...; bo trong = lay input/ -> output/rounded/)\n  make foldericon dat icon cho thu muc (ICON=...ico FOLDER=... NAME=... STORE=...; bo ICON = lay ICO moi nhat output/icons/; bo NAME = giu ten goc)\n  make launcher   build launcher C# (can .NET 8+ SDK)\n  make new-launcher NAME=<TenApp> [ICON=...ico] sinh launcher moi theo khung tray-clone\n  make gui        mo GUI truc tiep bang pythonw (khong hien console)\n  make clean      xoa output/ __pycache__ .pytest_cache (giu input/)''')"
+	@python -c "print('''IconMaker Makefile:\n  make all        install + test + sprites + icons\n  make install    cai Python deps (requirements.txt)\n  make test       chay toan bo pytest\n  make sprites    tach sprite: $(INPUT_DIR)/ -> $(SPRITES)/\n  make icons      build ICO chat luong cao: $(SPRITES)/ -> $(ICONS)/ (1 tang, phang)\n  make ico        convert truc tiep (SRC=...png DEST=...ico; bo trong = lay input/ -> output/convert/)\n  make rounded    bo goc anh (RSRC=... RDEST=... RADIUS=...; bo trong = lay input/ -> output/rounded/)\n  make resize     resize vuong 16/48/128 (RSRC=... EXT=.png; bo trong = lay input/ -> output/resize/)\n  make convfmt    doi dinh dang png/jpg/webp (FSRC=... FMT=.webp QUALITY=100; bo trong = lay input/ -> output/convert_format/)\n  make foldericon dat icon cho thu muc (ICON=...ico FOLDER=... NAME=... STORE=...; bo ICON = lay ICO moi nhat output/icons/; bo NAME = giu ten goc)\n  make junction tao junction point (JLINK=<duong dan ao> JTARGET=<thu muc that>, JNO=1 de bo attrib +r /l)\n  make launcher   build launcher C# (can .NET 8+ SDK)\n  make new-launcher NAME=<TenApp> [ICON=...ico] sinh launcher moi theo khung tray-clone\n  make gui        mo GUI truc tiep bang pythonw (khong hien console)\n  make clean      xoa output/ __pycache__ .pytest_cache (giu input/)''')"
 
 all: install test sprites icons
 
@@ -51,12 +51,30 @@ RADIUS ?= 64
 rounded:
 	python -m service.image_ops "$(RSRC)" "$(RDEST)" --radius $(RADIUS)
 
+RSRC ?=
+EXT ?= .png
+RESTYPE ?= resize
+resize:
+	python -m service.resize "$(RSRC)" --ext "$(EXT)"
+
+FSRC ?=
+FMT ?= .webp
+QUALITY ?= 100
+convfmt:
+	python -m service.format_convert "$(FSRC)" --fmt "$(FMT)" --quality $(QUALITY)
+
 ICON ?=
 FOLDER ?= .
 NAME ?=
 STORE ?=
 foldericon:
 	python -m service.foldericon "$(ICON)" "$(FOLDER)" $(if $(strip $(STORE)),--store "$(STORE)") $(if $(strip $(NAME)),--name "$(NAME)")
+
+JLINK ?=
+JTARGET ?=
+JNO ?=
+junction:
+	python -m service.junction "$(JLINK)" "$(JTARGET)" $(if $(strip $(JNO)),--no-readonly)
 
 launcher:
 	dotnet build $(LAUNCHER) -c Release

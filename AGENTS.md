@@ -20,7 +20,7 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 | `src/gui/` | Chỉ hiển thị (main_window, base_tool, widgets, theme) |
 | `src/tools/` | Mỗi tool 1 package `view.py` + `controller.py`; đăng ký ở `registry.py` |
 | `input/` | Đầu vào mặc định của tool khi gọi qua CLI |
-| `output/<tenTool>/` | Đầu ra của tool (convert, rounded, sprites, icons) |
+| `output/<tenTool>/` | Đầu ra của tool (convert, rounded, resize, sprites, icons) |
 | `.agents/README.md` | Bảng chỉ dẫn của toàn bộ `.agents/` |
 | `.agents/plan/` | Các bản plan chi tiết từng phần |
 | `.agents/decisions.md` | Nhật ký quyết định |
@@ -44,6 +44,10 @@ Hướng dẫn và luật cho agent làm việc trong dự án này. Mọi agent
 13. **Launcher chỉ là template tray-clone, không dùng để chạy app này.** `launcher/` lưu khung `TrayDemo` để sau này sửa `AppConfig.cs` rồi build exe cho app server khác (Python/Node); chỉ sửa `AppConfig.cs` + `Assets/icon.ico` khi clone, csproj gen bằng `dotnet new winforms` rồi patch 2 dòng icon (không copy tay); app mới sinh bằng `launcher/new-launcher.ps1` (`make new-launcher NAME=...`). IconMaker chạy trực tiếp bằng `make gui` (`pythonw src/main.py`); không có `make run`.
 14. **Code trong src/, input/ vào — output/<tool> ra.** Mọi mã nguồn Python nằm trong `src/` (chạy từ gốc với `PYTHONPATH=src`; `pytest.ini` đã đặt sẵn). `input/` là đầu vào mặc định khi gọi tool qua CLI (bỏ trống tham số); thiếu input thì phải điền rõ như GUI. Mọi đầu ra của tool vào `output/<tenTool>/` (`core/paths.py` giữ hằng số); GUI prefill sẵn các đường dẫn này.
 15. **Tab Icon thư mục lấy ICO từ output/icons và cho đổi tên trước khi cài.** Dialog chọn ICO mở thẳng `output/icons` (prefill ICO mới nhất); ô "Tên mới" bỏ trống = giữ tên gốc, nhập vào thì chuẩn hoá qua `sanitize_icon_name` rồi mới `install_icon` vào thư viện `~/OneDrive/Pictures/Icon` trước khi ghi desktop.ini.
+16. **Tool Resize icon tạo 3 cỡ vuông cố định.** Từ 1 ảnh png/jpg/webp tạo 3 ảnh vuông 16x16/48x48/128x128 tên `icon16`/`icon48`/`icon128`, đuôi mặc định `.png` có thể đổi (jpg/jpeg lưu bằng convert RGB vì JPEG không có alpha); output vào `output/resize/`. Tên file, danh sách size và đuôi mặc định là hợp đồng của `service/resize.py` (giữ nguyên khi refactor).
+17. **Tool Đổi định dạng ảnh png/jpg/webp.** Đầu vào 1 ảnh (png/jpg/jpeg/webp), đầu ra chọn 1 trong 2 định dạng còn lại (không cho đổi trùng đuôi); đuôi `.jpeg` chuẩn hoá về `.jpg`. Output vào `output/convert_format/` (`OUTPUT_CONVERT_FORMAT` trong `core/paths.py`). Với đích jpg/webp hiện thanh trượt chất lượng nén mặc định 100% (1..100, thấp = nén mạnh) kèm preview ảnh sau nén (roundtrip encode→decode trong bộ nhớ để thấy mất chi tiết thật); đích png lossless, không nén. Contract giữ trong `service/format_convert.py` (`normalize_ext`, `clamp_quality`, `target_formats`, `compress_bytes`, `compressed_preview`, `convert_format_file`); CLI `python -m service.format_convert [nguon] [--fmt .webp] [--quality 100]`, target `make convfmt FSRC=... FMT=... QUALITY=...`.
+17. **Tool Junction tạo link ảo bằng mklink /J rồi attrib +r /l.** `service/junction.py` validate (ảo chưa tồn tại, thật là thư mục có sẵn), chạy `cmd /c mklink /J` và `attrib +r <ảo> /l` trên chính reparse point (KHÔNG resolve() link — nếu không sẽ đặt +r nhầm vào thư mục thật); tab GUI nhập thư mục cha + tên mới hoặc paste đường dẫn đủ, có checkbox tắt +r (`--no-readonly` ở CLI, `make junction JLINK=... JTARGET=... JNO=1`).
+18. **Tool Icon thư mục tìm hàng loạt bằng `*<tên>`.** Gõ `*<tên>` ở ô Thư mục hiện nút Tìm: quét `Path.home()` khớp tên chính xác không hoa/thường, 1 checkbox cho mỗi ổ đĩa ngoài để quét thêm, luôn bỏ qua cây TEMP/TMP/AppData/LocalAppData và nhánh có phần bắt đầu `.` dưới home (ngoài home cho phép `.`), bỏ qua thư mục ẩn/system, không follow link; kết quả hiện list tick chọn (Chọn hết/Bỏ hết), đặt 1 lần cho mọi thư mục đã tick qua `run_apply_many` (cài icon 1 lần, gom lỗi từng thư mục). Contract trong `service/folder_search.py` (`is_batch_input`, `parse_batch_name`, `find_folders_by_name`).
 
 ## Quy ước code
 
@@ -71,3 +75,7 @@ Luật mới được thêm khi người dùng đưa ra quyết định (xem `.a
 - **2026-09-14 — L11:** Code Python vào `src/`, CLI mặc định `input/` → `output/<tenTool>/`, thiếu thì điền rõ như GUI (Luật 14).
 - **2026-09-14 — L12:** Launcher chỉ là template cho app server khác, không dùng để chạy IconMaker; bỏ `make run`, IconMaker chạy bằng `make gui` (Luật 13).
 - **2026-09-14 — L13:** Tab Icon thư mục lấy ICO từ output/icons và cho đổi tên trước khi cài (Luật 15).
+- **2026-09-14 — L14:** Tool Resize icon tạo 3 cỡ vuông 16/48/128 tên icon16/icon48/icon128, đuôi mặc định .png đổi được, jpg/jpeg lưu bằng RGB (Luật 16).
+- **2026-09-14 — L15:** Tool Đổi định dạng ảnh png/jpg/webp có slider chất lượng nén mặc định 100% (chỉ jpg/webp, png lossless) + preview roundtrip nén (Luật 17).
+- **2026-09-14 — L15:** Tool Junction tạo link ảo bằng mklink /J rồi attrib +r /l trên chính link (không resolve, tránh đặt +r nhầm vào thư mục thật); GUI nhập cha + tên mới hoặc paste đường dẫn đủ, CLI `--no-readonly`, `make junction JLINK=... JTARGET=...` (Luật 17).
+- **2026-09-14 — L16:** Tool Icon thư mục tìm hàng loạt `*<tên>`: quét home khớp tên chính xác không hoa/thường + checkbox từng ổ đĩa ngoài, bỏ qua TEMP/AppData/nhánh dot dưới home/ẩn-system/không follow link; list tick chọn, đặt 1 lần qua `run_apply_many` (Luật 18).

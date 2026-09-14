@@ -14,6 +14,8 @@ OUTPUT_CONVERT = OUTPUT_ROOT / "convert"
 OUTPUT_ROUNDED = OUTPUT_ROOT / "rounded"
 OUTPUT_SPRITES = OUTPUT_ROOT / "sprites"
 OUTPUT_ICONS = OUTPUT_ROOT / "icons"
+OUTPUT_RESIZE = OUTPUT_ROOT / "resize"
+OUTPUT_CONVERT_FORMAT = OUTPUT_ROOT / "convert_format"
 APP_ICON = Path("assets/icons/IconMaker.ico")
 
 

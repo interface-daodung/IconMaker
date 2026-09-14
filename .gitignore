@@ -30,3 +30,5 @@ iconmaker_out/
 # Dữ liệu người dùng & kết quả tool
 input/
 output/
+IconMaker.lnk
+run.vbs

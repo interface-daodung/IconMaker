@@ -11,6 +11,7 @@ from service import convert, foldericon
 from tools import registry
 from tools.convert_tool.controller import parse_sizes, run_conversion
 from tools.foldericon_tool.controller import parse_new_name, run_apply
+from tools.junction_tool.controller import join_link_path, parse_inputs, run_create
 from tools.rounded_tool.controller import parse_radius, run_round
 
 
@@ -114,13 +115,53 @@ def test_next_theme_toggles_dark_light():
     assert next_theme("Light") == "Dark"
 
 
+def test_join_link_path_combines_parent_and_name():
+    assert join_link_path(r"C:\OneDrive\Pictures", "My App") == r"C:\OneDrive\Pictures\My App"
+
+
+def test_join_link_path_full_path_pasted_in_parent():
+    assert join_link_path(r"C:\OneDrive\Pictures\My App", "  ") == r"C:\OneDrive\Pictures\My App"
+
+
+def test_join_link_path_rejects_bad_inputs():
+    with pytest.raises(ValueError):
+        join_link_path("", "child")
+    with pytest.raises(ValueError):
+        join_link_path(r"C:\dir", 'a<b:"/\\|?*')
+
+
+def test_parse_inputs_junction_strips_and_requires_both():
+    assert parse_inputs("  a ", " b ") == ("a", "b")
+    with pytest.raises(ValueError):
+        parse_inputs("", "b")
+    with pytest.raises(ValueError):
+        parse_inputs("a", None)
+
+
+def test_run_create_junction_forwards_readonly(monkeypatch):
+    from service import junction
+
+    seen: dict = {}
+
+    def fake_create(link, target, readonly=True):
+        seen.update(link=link, target=target, readonly=readonly)
+        return link
+
+    monkeypatch.setattr(junction, "create_junction", fake_create)
+    assert run_create(r"C:\virtual", r"D:\real", False) == r"C:\virtual"
+    assert seen == {"link": r"C:\virtual", "target": r"D:\real", "readonly": False}
+
+
 def test_registry_lists_all_tool_tabs():
     specs = registry.get_tools()
     assert [s.title for s in specs] == [
         "PNG → ICO",
+        "Đổi định dạng",
         "Bo góc",
+        "Resize icon",
         "Tách sprite",
         "Sprite → ICO",
         "Icon thư mục",
+        "Junction",
     ]
     assert all(issubclass(s.tab_class, ToolTab) for s in specs)

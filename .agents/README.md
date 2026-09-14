@@ -16,6 +16,7 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | `plan/006-icon-quality.md` | Xuất icon `.ico` chất lượng cao từ sprites_out |
 | `plan/007-folder-icon.md` | Đặt icon cho thư mục Windows qua desktop.ini |
 | `plan/008-mvp-restructure.md` | Tái cấu trúc core/gui/tools + tool bo góc (thay layout `src/iconmaker/`) |
+| `plan/009-junction.md` | Tool tạo Junction Point (`mklink /J` + `attrib +r /l`) |
 | `decisions.md` | Nhật ký quyết định của người dùng |
 
 ## Cách dùng
@@ -42,6 +43,7 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | Icon chất lượng cao | 006 | ✅ (7 test icons, 58/58 pass) |
 | Đặt icon thư mục (desktop.ini) | 007 | ✅ (12 test foldericon + 1 test GUI, 71/71 pass) |
 | Tái cấu trúc MVP + bo góc | 008 | ✅ (layout src/, GUI 5 tab, input/ → output/<tool>/, 95/95 pass) |
+| Tạo Junction Point | 009 | ✅ (mklink /J + attrib +r /l, tab Junction, 145/145 pass) |
 
 ## Cách chạy
 
@@ -53,7 +55,10 @@ make test       # pytest
 make gui        # mo GUI truc tiep bang pythonw (khong console)
 make new-launcher NAME=<TenApp>  # sinh launcher moi theo khung tray-clone
 make rounded RSRC=in.png RDEST=out.png RADIUS=64  # bo goc anh
+make resize RSRC=in.png EXT=.png     # resize vuong 16/48/128 -> output/resize/
+make convfmt FSRC=in.png FMT=.webp QUALITY=70   # doi dinh dang png/jpg/webp + nen
 make foldericon ICON=... FOLDER=...   # đặt icon cho thư mục
+make junction JLINK=<duong-dan-ao> JTARGET=<thu-muc-that>   # tao junction point + attrib +r /l (JNO=1 de bo +r)
 make help       # danh sách target
 ```
 
@@ -66,8 +71,11 @@ python -m pytest                                  # test
 pythonw src/main.py                               # GUI
 python -m service.convert                        # CLI convert: input/ -> output/convert/
 python -m service.image_ops --radius 64          # CLI bo goc: input/ -> output/rounded/
+python -m service.resize                          # CLI resize 16/48/128: input/ -> output/resize/
+python -m service.format_convert --fmt .webp --quality 80  # CLI doi dinh dang + nen: input/ -> output/convert_format/
 python -m service.sprites                        # tach sprite: input/ -> output/sprites/
 python -m service.icons                          # build ICO: output/sprites/ -> output/icons/
 python -m service.foldericon C:\path\thu-muc     # đặt icon thư mục (ICO mới nhất output/icons/)
+python -m service.junction C:\ao\link D:\that\folder   # tạo junction + attrib +r /l (--no-readonly để bỏ +r)
 dotnet build launcher/IconMakerLauncher -c Release                # build khung launcher (template)
 ```
