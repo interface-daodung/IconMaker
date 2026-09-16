@@ -4,98 +4,32 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
-namespace IconMakerLauncher;
+namespace __APP_NAME__;
 
 sealed class ServerProcess : IDisposable
 {
     private Process? _process;
+    private int? _trackedPid;
+    private JobObjectTracker? _jobTracker;
     private readonly string _workingDirectory;
-    private readonly string _commandFile;
+    private readonly string _pidFilePath;
 
     public event Action<string>? LogReceived;
     public event Action<int>? Exited;
 
     public ServerProcess(string? workingDirectory = null)
     {
-        _workingDirectory = workingDirectory ?? ResolveWorkingDirectory();
-        _commandFile = ResolveCommandFile();
-    }
+        _workingDirectory = workingDirectory ?? AppConfig.ProjectDir;
 
-    // Thư mục app: AppConfig.ProjectDir nếu tồn tại, ngược lại đi ngược
-    // từ thư mục exe tìm src/main.py (đặt exe cạnh app là chạy).
-    private static string ResolveWorkingDirectory()
-    {
-        if (!string.IsNullOrWhiteSpace(AppConfig.ProjectDir) && Directory.Exists(AppConfig.ProjectDir))
-            return AppConfig.ProjectDir;
-
-        var appRoot = FindAppRoot();
-        if (appRoot is not null)
-            return appRoot;
-
-        if (!string.IsNullOrWhiteSpace(AppConfig.ProjectDir))
+        if (!Directory.Exists(_workingDirectory))
         {
             var exeDir = AppContext.BaseDirectory;
             var candidate = Path.GetFullPath(Path.Combine(exeDir, "..", "..", "..", "..", Path.GetFileName(AppConfig.ProjectDir)));
             if (Directory.Exists(candidate))
-                return candidate;
-            return AppConfig.ProjectDir;
+                _workingDirectory = candidate;
         }
 
-        return AppContext.BaseDirectory;
-    }
-
-    private static string? FindAppRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "main.py")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-        return null;
-    }
-
-    // Lệnh chạy: env ICONMAKER_PYTHON > AppConfig.CommandFile >
-    // pythonw/pyw/py/python trong PATH (ưu tiên bản không console).
-    private static string ResolveCommandFile()
-    {
-        var fromEnv = Environment.GetEnvironmentVariable("ICONMAKER_PYTHON");
-        if (!string.IsNullOrWhiteSpace(fromEnv))
-            return fromEnv;
-
-        if (!string.IsNullOrWhiteSpace(AppConfig.CommandFile) && CommandExists(AppConfig.CommandFile))
-            return AppConfig.CommandFile;
-
-        foreach (var candidate in new[] { "pythonw", "pyw", "py", "python" })
-        {
-            if (CommandExists(candidate))
-                return candidate;
-        }
-
-        return AppConfig.CommandFile;
-    }
-
-    private static bool CommandExists(string fileName)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(fileName, "--version")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using var proc = Process.Start(psi);
-            if (proc is null) return false;
-            proc.WaitForExit(5000);
-            return !proc.HasExited ? false : proc.ExitCode == 0;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+        _pidFilePath = Path.Combine(_workingDirectory, ".launcher.pid");
     }
 
     public bool IsRunning()
@@ -104,10 +38,11 @@ sealed class ServerProcess : IDisposable
         catch { return false; }
     }
 
-    public int? Pid => IsRunning() ? _process!.Id : null;
+    public int? Pid => _trackedPid ?? (IsRunning() ? _process!.Id : null);
 
     private static bool IsPortInUse(int port)
     {
+        if (port <= 0) return false;
         try
         {
             using var client = new System.Net.Sockets.TcpClient();
@@ -122,7 +57,9 @@ sealed class ServerProcess : IDisposable
     {
         if (IsRunning()) return;
 
-        // Port <= 0 → app GUI, bỏ qua mọi kiểm tra cổng.
+        // Cleanup tiến trình cũ còn sót lại từ PID file (nếu có)
+        CleanUpPreviousPid();
+
         if (AppConfig.Port > 0 && IsPortInUse(AppConfig.Port))
         {
             LogReceived?.Invoke(AppConfig.PortBusyLine1);
@@ -134,14 +71,18 @@ sealed class ServerProcess : IDisposable
         if (!Directory.Exists(_workingDirectory))
         {
             MessageBox.Show(
-                $"{AppConfig.MsgNotFoundDir}:\n{_workingDirectory}\n\nVui lòng sửa AppConfig.ProjectDir",
+                $"{AppConfig.MsgNotFoundDir}:\n{_workingDirectory}",
                 AppConfig.AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
 
+        // Khởi tạo Windows Job Object để quản lý toàn bộ vòng đời cây tiến trình của make run
+        _jobTracker?.Dispose();
+        _jobTracker = new JobObjectTracker($"{AppConfig.AppName}_Job_{Guid.NewGuid():N}");
+
         var psi = new ProcessStartInfo
         {
-            FileName = _commandFile,
+            FileName = AppConfig.CommandFile,
             Arguments = AppConfig.CommandArgs,
             WorkingDirectory = _workingDirectory,
             UseShellExecute = false,
@@ -162,47 +103,40 @@ sealed class ServerProcess : IDisposable
             _process.ErrorDataReceived += (s, e) => { if (e.Data != null) LogReceived?.Invoke(e.Data); };
             _process.Exited += (s, e) =>
             {
-                try { Exited?.Invoke(_process?.ExitCode ?? -1); } catch { }
-                LogReceived?.Invoke(AppConfig.ServerExitedLog(_process?.ExitCode ?? -1));
+                int exitCode = -1;
+                try { exitCode = _process?.ExitCode ?? -1; } catch { }
+                DeletePidFile();
+                try { Exited?.Invoke(exitCode); } catch { }
+                LogReceived?.Invoke(AppConfig.ServerExitedLog(exitCode));
             };
 
             if (!_process.Start())
                 throw new InvalidOperationException("Process.Start returned false");
 
+            _trackedPid = _process.Id;
+            SavePidToFile(_trackedPid.Value);
+
+            // Gán process vào Job Object để Windows tự động kill toàn bộ child processes khi job kết thúc
+            bool assigned = _jobTracker.AssignProcess(_process);
+
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
 
-            LogReceived?.Invoke(AppConfig.StartedLog(_process.Id, _workingDirectory));
+            LogReceived?.Invoke(AppConfig.StartedLog(_trackedPid.Value, _workingDirectory));
+            LogReceived?.Invoke($"[Launcher] PID {_trackedPid.Value} saved. Windows Job Object tracking: {(assigned ? "Active" : "Not supported")}");
             LogReceived?.Invoke(AppConfig.CommandLogLine);
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 2)
         {
-            if (string.IsNullOrWhiteSpace(FindPythonProbe()))
-            {
-                MessageBox.Show(AppConfig.MsgPythonNotFound, AppConfig.AppName,
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                LogReceived?.Invoke(AppConfig.StartFailedLog(AppConfig.MsgPythonNotFound));
-                return;
-            }
-            LogReceived?.Invoke($"[Launcher] {_commandFile} not found ({ex.Message}), fallback to cmd /c ...");
+            LogReceived?.Invoke($"[Launcher] Lệnh '{AppConfig.CommandFile}' không tìm thấy trực tiếp, chuyển sang chạy qua cmd.exe /c...");
             StartViaCmdFallback();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Không khởi động được app:\n{ex.Message}", AppConfig.AppName,
+            MessageBox.Show($"Không khởi động được server:\n{ex.Message}", AppConfig.AppName,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             LogReceived?.Invoke(AppConfig.StartFailedLog(ex.ToString()));
         }
-    }
-
-    private static string? FindPythonProbe()
-    {
-        foreach (var candidate in new[] { "pythonw", "pyw", "py", "python" })
-        {
-            if (CommandExists(candidate))
-                return candidate;
-        }
-        return null;
     }
 
     private void StartViaCmdFallback()
@@ -222,28 +156,48 @@ sealed class ServerProcess : IDisposable
         psi.Environment["PYTHONUTF8"] = "1";
         psi.Environment["PYTHONIOENCODING"] = "utf-8";
 
-        _process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        _process.OutputDataReceived += (s, e) => { if (e.Data != null) LogReceived?.Invoke(e.Data); };
-        _process.ErrorDataReceived += (s, e) => { if (e.Data != null) LogReceived?.Invoke(e.Data); };
-        _process.Exited += (s, e) => { try { Exited?.Invoke(_process?.ExitCode ?? -1); } catch { } };
+        try
+        {
+            _process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+            _process.OutputDataReceived += (s, e) => { if (e.Data != null) LogReceived?.Invoke(e.Data); };
+            _process.ErrorDataReceived += (s, e) => { if (e.Data != null) LogReceived?.Invoke(e.Data); };
+            _process.Exited += (s, e) =>
+            {
+                int exitCode = -1;
+                try { exitCode = _process?.ExitCode ?? -1; } catch { }
+                DeletePidFile();
+                try { Exited?.Invoke(exitCode); } catch { }
+                LogReceived?.Invoke(AppConfig.ServerExitedLog(exitCode));
+            };
 
-        _process.Start();
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
-        LogReceived?.Invoke($"[Launcher] Fallback cmd started PID={_process.Id}");
+            _process.Start();
+            _trackedPid = _process.Id;
+            SavePidToFile(_trackedPid.Value);
+
+            bool assigned = _jobTracker?.AssignProcess(_process) ?? false;
+
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+            LogReceived?.Invoke($"[Launcher] Fallback cmd started PID={_trackedPid.Value} (JobObject: {(assigned ? "Active" : "Off")})");
+        }
+        catch (Exception ex)
+        {
+            LogReceived?.Invoke(AppConfig.StartFailedLog(ex.ToString()));
+        }
     }
-
-    public void Show() { /* no-op: log form handled by TrayAppContext */ }
-    public void Hide() { /* no-op */ }
 
     public void Kill()
     {
-        if (IsRunning())
+        int? targetPid = _trackedPid ?? (_process != null && !_process.HasExited ? _process.Id : null);
+
+        if (targetPid.HasValue)
         {
+            int pid = targetPid.Value;
+            LogReceived?.Invoke(AppConfig.KillingLog(pid));
+
+            // 1. Tiêu diệt triệt để bằng taskkill cây tiến trình (/T) cưỡng chế (/F)
             try
             {
-                int pid = _process!.Id;
-                LogReceived?.Invoke(AppConfig.KillingLog(pid));
                 var psi = new ProcessStartInfo
                 {
                     FileName = "taskkill",
@@ -253,40 +207,60 @@ sealed class ServerProcess : IDisposable
                 };
                 using var tk = Process.Start(psi);
                 tk?.WaitForExit(5000);
-                _process.WaitForExit(3000);
-                if (!_process.HasExited)
+            }
+            catch (Exception ex)
+            {
+                LogReceived?.Invoke($"[Launcher] taskkill /T warning: {ex.Message}");
+            }
+
+            // 2. Kill qua .NET Process API (entireProcessTree)
+            try
+            {
+                if (_process != null && !_process.HasExited)
+                {
                     _process.Kill(entireProcessTree: true);
+                    _process.WaitForExit(3000);
+                }
             }
-            catch
+            catch { }
+
+            // 3. Đóng và tiêu diệt Job Object (hệ điều hành Windows sẽ kill toàn bộ con/cháu còn sót)
+            try
             {
-                try { _process?.Kill(entireProcessTree: true); } catch { }
+                _jobTracker?.TerminateAll();
+                _jobTracker?.Dispose();
+                _jobTracker = null;
             }
-            finally
-            {
-                try { _process?.Dispose(); } catch { }
-                _process = null;
-            }
+            catch { }
+
+            _process?.Dispose();
+            _process = null;
+            _trackedPid = null;
+            DeletePidFile();
+            LogReceived?.Invoke($"[Launcher] Đã dừng toàn bộ tiến trình PID={pid} thành công.");
         }
         else
         {
+            _jobTracker?.Dispose();
+            _jobTracker = null;
             _process?.Dispose();
             _process = null;
         }
 
-        // Chỉ dọn cổng khi launcher cấu hình Port > 0 (server).
+        // 4. Nếu có port và vẫn bận, tìm và tiêu diệt PID đang chiếm cổng
         if (AppConfig.Port > 0 && IsPortInUse(AppConfig.Port))
         {
             try
             {
                 LogReceived?.Invoke($"[Launcher] {AppConfig.PortStillBusy}");
                 var pids = FindPidsByPort(AppConfig.Port);
-                foreach (var pid in pids)
+                foreach (var p in pids)
                 {
-                    LogReceived?.Invoke(AppConfig.PortHolderLog(pid));
+                    LogReceived?.Invoke(AppConfig.PortHolderLog(p));
                     var psi2 = new ProcessStartInfo
                     {
                         FileName = "taskkill",
-                        Arguments = $"/PID {pid} /F",
+                        Arguments = $"/PID {p} /F",
                         UseShellExecute = false,
                         CreateNoWindow = true,
                     };
@@ -301,6 +275,59 @@ sealed class ServerProcess : IDisposable
                 LogReceived?.Invoke($"[Launcher] Kill port holder failed: {ex.Message}");
             }
         }
+    }
+
+    private void SavePidToFile(int pid)
+    {
+        try
+        {
+            File.WriteAllText(_pidFilePath, pid.ToString());
+        }
+        catch { }
+    }
+
+    private void DeletePidFile()
+    {
+        try
+        {
+            if (File.Exists(_pidFilePath))
+                File.Delete(_pidFilePath);
+        }
+        catch { }
+    }
+
+    private void CleanUpPreviousPid()
+    {
+        try
+        {
+            if (File.Exists(_pidFilePath))
+            {
+                string text = File.ReadAllText(_pidFilePath).Trim();
+                if (int.TryParse(text, out int oldPid))
+                {
+                    try
+                    {
+                        var oldProc = Process.GetProcessById(oldPid);
+                        if (oldProc != null && !oldProc.HasExited)
+                        {
+                            LogReceived?.Invoke($"[Launcher] Phát hiện tiến trình cũ PID={oldPid} từ lần chạy trước, đang dọn dẹp...");
+                            var psi = new ProcessStartInfo
+                            {
+                                FileName = "taskkill",
+                                Arguments = $"/PID {oldPid} /T /F",
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                            };
+                            using var tk = Process.Start(psi);
+                            tk?.WaitForExit(3000);
+                        }
+                    }
+                    catch { }
+                }
+                DeletePidFile();
+            }
+        }
+        catch { }
     }
 
     private static System.Collections.Generic.List<int> FindPidsByPort(int port)
@@ -336,6 +363,6 @@ sealed class ServerProcess : IDisposable
 
     public void Dispose()
     {
-        _process?.Dispose();
+        Kill();
     }
 }

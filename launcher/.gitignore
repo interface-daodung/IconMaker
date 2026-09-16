@@ -1,0 +1,11 @@
+# Build artifacts
+bin/
+obj/
+dist/
+Launcher/
+.tmp_build_*/
+.tmp_pub_*/
+
+# IDE
+.vs/
+*.user

@@ -103,3 +103,23 @@ launcher/
 ## Ghi chú triển khai
 
 (Để trống — agent triển khai điền vào sau khi xong.)
+
+## Mục bổ sung (2026-09-14) — Tab "Build Launcher" trong app Python
+
+Tab GUI gọi `launcher/build-launcher.ps1` (README của launcher) thay vì build tay:
+
+- `src/service/launcher.py`: `validate_server_dir` + `sanitize_launcher_name` +
+  `install_build_icon` (copy ICO vào thư viện `~/OneDrive/Pictures/Icon` đặt tên
+  `<ten-launcher>.ico` — Luật 8) + `build_command`/`run_build` (subprocess
+  `powershell -File build-launcher.ps1 -ServerDir -Name -Icon -OutDir -Mode`).
+  Tên project C# (`project_clean_name`) mirror đúng regex của ps1.
+- `src/tools/launcher_tool/`: view 3 ô (thư mục server mở sẵn
+  `C:\Users\inter\Project`, ICO prefill mới nhất `output/icons`, tên launcher
+  tự gợi ý theo tên thư mục), build chạy thread nền vì `dotnet publish` lâu.
+- `.exe` ra `output/launchers/`; CLI `python -m service.launcher`,
+  `make build-launcher SERVER=... ICON=... LNAME=... [MODE=...]`.
+- **2026-09-14 — log trong tab, không console ngoài:** powershell là console-app nên
+  tự bật cửa sổ console riêng kể cả khi GUI chạy bằng pythonw — `service/launcher.py`
+  đặt `CREATE_NO_WINDOW` + `SW_HIDE` (`_hidden_popen_kwargs`, dùng cho cả 2 đường
+  `run`/`Popen`) và thêm `stream_command`/`run_build(..., on_output=...)` đẩy từng
+  dòng log vào `CTkTextbox` trong tab theo thời gian thực (qua `after`, thread nền).

@@ -6,11 +6,11 @@ from dataclasses import dataclass
 
 from gui.base_tool import ToolTab
 from tools import (
-    convert_tool,
+    export_tool,
     foldericon_tool,
-    format_convert_tool,
     icons_tool,
     junction_tool,
+    launcher_tool,
     resize_tool,
     rounded_tool,
     sprites_tool,
@@ -26,12 +26,12 @@ class ToolSpec:
 def get_tools() -> list[ToolSpec]:
     """Danh sách tool theo thứ tự tab hiển thị."""
     return [
-        ToolSpec(convert_tool.Tab.title, convert_tool.Tab),
-        ToolSpec(format_convert_tool.Tab.title, format_convert_tool.Tab),
+        ToolSpec(export_tool.Tab.title, export_tool.Tab),
         ToolSpec(rounded_tool.Tab.title, rounded_tool.Tab),
         ToolSpec(resize_tool.Tab.title, resize_tool.Tab),
         ToolSpec(sprites_tool.Tab.title, sprites_tool.Tab),
         ToolSpec(icons_tool.Tab.title, icons_tool.Tab),
         ToolSpec(foldericon_tool.Tab.title, foldericon_tool.Tab),
         ToolSpec(junction_tool.Tab.title, junction_tool.Tab),
+        ToolSpec(launcher_tool.Tab.title, launcher_tool.Tab),
     ]

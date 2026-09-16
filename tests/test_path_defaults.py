@@ -10,6 +10,7 @@ from core.paths import (
     APP_ICON,
     INPUT_DIR,
     OUTPUT_CONVERT,
+    OUTPUT_EXPORT,
     OUTPUT_ICONS,
     OUTPUT_ROUNDED,
     OUTPUT_ROOT,
@@ -32,6 +33,7 @@ def test_paths_constants():
     assert OUTPUT_ROUNDED == Path("output/rounded")
     assert OUTPUT_SPRITES == Path("output/sprites")
     assert OUTPUT_ICONS == Path("output/icons")
+    assert OUTPUT_EXPORT == Path("output/export")
     assert APP_ICON == Path("assets/icons/IconMaker.ico")
 
 

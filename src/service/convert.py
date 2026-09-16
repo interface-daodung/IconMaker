@@ -37,29 +37,29 @@ def validate_sizes(sizes: object) -> list[int]:
     return sorted(set(out))
 
 
-def convert_png_to_ico(
+def convert_image_to_ico(
     source: str | Path,
     dest: str | Path,
     sizes: list[int] | None = None,
 ) -> str:
-    """Chuyển file PNG `source` thành file ICO `dest`.
+    """Chuyển file ảnh `source` (png/jpg/jpeg/webp) thành file ICO `dest`.
 
-    - Ảnh vào phải là PNG đọc được; RGB sẽ được thêm kênh alpha (RGBA).
-    - Mỗi kích thước trong `sizes` sẽ được resize (kể cả upscale) bằng LANCZOS
-      và ghi đủ vào một file .ico duy nhất.
-    - Tạo thư mục cha của `dest` nếu chưa tồn tại.
-    - Trả về đường dẫn file ICO đã ghi.
+    Dùng chung cho tool Xuất ảnh: mở ảnh bất kỳ đọc được, ép RGBA,
+    resize LANCZOS từng size rồi ghi đủ vào một file .ico duy nhất.
     """
+    from core.formats import READABLE_IMAGE_EXTENSIONS
+
     src = Path(source)
     if not src.is_file():
         raise FileNotFoundError(f"Không tìm thấy file nguồn: {src}")
+    if src.suffix.lower() not in READABLE_IMAGE_EXTENSIONS:
+        raise ValueError(
+            f"File nguồn phải là ảnh {sorted(READABLE_IMAGE_EXTENSIONS)}, "
+            f"nhận được '{src.suffix}'"
+        )
 
     try:
         with Image.open(src) as img:
-            if img.format != "PNG":
-                raise ValueError(
-                    f"File nguồn phải là PNG, nhận được {img.format or 'không rõ định dạng'}"
-                )
             rgba = img.convert("RGBA")
     except UnidentifiedImageError as exc:
         raise ValueError(f"Không đọc được ảnh (hỏng hoặc không phải ảnh): {src}") from exc
@@ -93,6 +93,35 @@ def convert_png_to_ico(
             frame.close()
 
     return str(dest_path)
+
+
+def convert_png_to_ico(
+    source: str | Path,
+    dest: str | Path,
+    sizes: list[int] | None = None,
+) -> str:
+    """Chuyển file PNG `source` thành file ICO `dest`.
+
+    - Ảnh vào phải là PNG đọc được; RGB sẽ được thêm kênh alpha (RGBA).
+    - Mỗi kích thước trong `sizes` sẽ được resize (kể cả upscale) bằng LANCZOS
+      và ghi đủ vào một file .ico duy nhất.
+    - Tạo thư mục cha của `dest` nếu chưa tồn tại.
+    - Trả về đường dẫn file ICO đã ghi.
+    """
+    src = Path(source)
+    if not src.is_file():
+        raise FileNotFoundError(f"Không tìm thấy file nguồn: {src}")
+
+    try:
+        with Image.open(src) as img:
+            if img.format != "PNG":
+                raise ValueError(
+                    f"File nguồn phải là PNG, nhận được {img.format or 'không rõ định dạng'}"
+                )
+    except UnidentifiedImageError as exc:
+        raise ValueError(f"Không đọc được ảnh (hỏng hoặc không phải ảnh): {src}") from exc
+
+    return convert_image_to_ico(src, dest, sizes)
 
 
 def main(argv: list[str] | None = None) -> int:

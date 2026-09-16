@@ -1,4 +1,4 @@
-"""View tab đổi định dạng ảnh png/jpg/webp kèm nén + preview."""
+"""View tab Xuất ảnh: 1 ảnh vào → radio jpg/png/webp/ico → lưu vào output/export/."""
 
 from __future__ import annotations
 
@@ -9,43 +9,63 @@ import customtkinter as ctk
 from PIL import Image
 
 from core.formats import READABLE_IMAGE_EXTENSIONS
-from core.paths import OUTPUT_CONVERT_FORMAT
+from core.paths import OUTPUT_EXPORT
 from gui.base_tool import ToolTab
 from gui.widgets import FileRow, ImagePreview
-from tools.format_convert_tool.controller import (
+from service import convert
+from tools.export_tool.controller import (
+    ALL_SIZES_LABEL,
+    DEFAULT_FMT,
     DEFAULT_QUALITY,
-    options_for,
+    EXPORT_FORMATS,
     parse_quality,
-    preview_format,
-    run_format_convert,
+    parse_sizes,
+    preview_export,
+    run_export,
 )
 
-_LOSSLESS_FMT = ".png"
+_LOSSLESS_NO_SLIDER = (".png", ".ico")
 
 
 class Tab(ToolTab):
-    title = "Đổi định dạng"
+    title = "Xuất ảnh"
 
     def build(self) -> None:
         self._img: Image.Image | None = None
-        self._radio_widgets: list[ctk.CTkRadioButton] = []
 
         self.row_src = FileRow(
             self,
             "Ảnh vào:",
             filetypes=[("Images", "*.png *.jpg *.jpeg *.webp"), ("All files", "*.*")],
-            dialog_title="Chọn ảnh cần đổi định dạng",
+            dialog_title="Chọn ảnh cần xuất",
         )
         self.row_src.pack(fill="x", padx=10, pady=4)
         self.row_src.var.trace_add("write", lambda *_a: self._on_source_changed())
 
         self.fmt_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.fmt_frame.pack(fill="x", padx=10, pady=4)
-        self.fmt_label = ctk.CTkLabel(
-            self.fmt_frame, text="Đổi sang:", width=90, anchor="w"
+        ctk.CTkLabel(self.fmt_frame, text="Xuất ra:", width=90, anchor="w").pack(
+            side="left"
         )
-        self.fmt_label.pack(side="left")
-        self.fmt_var = ctk.StringVar(value="")
+        self.fmt_var = ctk.StringVar(value=DEFAULT_FMT)
+        for ext in EXPORT_FORMATS:
+            ctk.CTkRadioButton(
+                self.fmt_frame,
+                text=ext,
+                variable=self.fmt_var,
+                value=ext,
+                command=self._on_fmt_change,
+            ).pack(side="left", padx=6)
+
+        opt_frame = ctk.CTkFrame(self, fg_color="transparent")
+        opt_frame.pack(fill="x", padx=10, pady=4)
+        ctk.CTkLabel(opt_frame, text="Kích thước:", width=90, anchor="w").pack(
+            side="left"
+        )
+        self.size_var = ctk.StringVar(value=ALL_SIZES_LABEL)
+        choices = [str(s) for s in convert.get_default_sizes()] + [ALL_SIZES_LABEL]
+        self.size_menu = ctk.CTkOptionMenu(opt_frame, variable=self.size_var, values=choices)
+        self.size_menu.pack(side="left", padx=6)
 
         self.q_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.q_frame.pack(fill="x", padx=10, pady=4)
@@ -72,12 +92,12 @@ class Tab(ToolTab):
             actions, text="Xem trước", width=110, command=self._update_preview
         ).pack(side="left", padx=6)
         ctk.CTkButton(
-            actions, text="Đổi & Lưu", width=110, command=self._save
+            actions, text="Xuất & Lưu", width=110, command=self._save
         ).pack(side="right")
 
         self.hint = ctk.CTkLabel(
             self,
-            text="Chọn ảnh vào để hiện định dạng đích.",
+            text=f"Xuất 1 định dạng mỗi lần, lưu vào {OUTPUT_EXPORT}/.",
             anchor="w",
             wraplength=600,
         )
@@ -85,12 +105,18 @@ class Tab(ToolTab):
 
         self.preview = ImagePreview(self)
         self.preview.pack(fill="both", expand=True, padx=10, pady=4)
+        self._on_fmt_change()
+
+    def _current_fmt(self) -> str:
+        return self.fmt_var.get() or DEFAULT_FMT
+
+    def _current_quality(self) -> int:
+        return max(1, min(100, int(round(self.q_slider.get()))))
 
     def _on_source_changed(self) -> None:
         source = self.row_src.get()
         if not source:
             self._close_img()
-            self._rebuild_radios([])
             return
         try:
             ext = Path(source).suffix.lower()
@@ -99,52 +125,26 @@ class Tab(ToolTab):
             img = Image.open(source)
         except (OSError, ValueError) as exc:
             self._close_img()
-            self._rebuild_radios([])
             self.hint.configure(text=f"Lỗi đọc ảnh: {exc}")
             self.set_status("Sẵn sàng")
             return
         self._close_img()
         self._img = img
-        options = options_for(source)
-        self._rebuild_radios(options)
         self.hint.configure(text="")
         self._update_preview()
 
-    def _rebuild_radios(self, options: list[str]) -> None:
-        for widget in self._radio_widgets:
-            widget.destroy()
-        self._radio_widgets.clear()
-        self.fmt_var.set("")
-        if not options:
-            return
-        for ext in options:
-            radio = ctk.CTkRadioButton(
-                self.fmt_frame,
-                text=ext,
-                variable=self.fmt_var,
-                value=ext,
-                command=self._on_fmt_change,
-            )
-            radio.pack(side="left", padx=6)
-            self._radio_widgets.append(radio)
-        self.fmt_var.set(options[0])
-        self._on_fmt_change()
-
-    def _current_fmt(self) -> str | None:
-        return self.fmt_var.get() or None
-
-    def _current_quality(self) -> int:
-        return max(1, min(100, int(round(self.q_slider.get()))))
-
     def _on_fmt_change(self) -> None:
         fmt = self._current_fmt()
-        if fmt is None:
+        if fmt == ".ico":
+            self.size_menu.configure(state="normal")
             self.q_slider.configure(state="disabled")
-            return
-        if fmt == _LOSSLESS_FMT:
+            self.q_label.configure(text="ICO đa size (không nén)")
+        elif fmt == ".png":
+            self.size_menu.configure(state="disabled")
             self.q_slider.configure(state="disabled")
             self.q_label.configure(text="PNG không nén (lossless)")
         else:
+            self.size_menu.configure(state="disabled")
             self.q_slider.configure(state="normal")
             self._sync_quality_label()
         self._update_preview()
@@ -160,18 +160,21 @@ class Tab(ToolTab):
         if self._img is None:
             return
         fmt = self._current_fmt()
-        if not fmt:
+        if fmt == ".ico":
+            self.preview.set_before(self._img)
+            self.preview.set_after(self._img)
+            self.set_status("ICO giữ nguyên ảnh gốc, resize khi lưu")
             return
-        quality = self._current_quality() if fmt != _LOSSLESS_FMT else DEFAULT_QUALITY
+        quality = self._current_quality() if fmt not in _LOSSLESS_NO_SLIDER else DEFAULT_QUALITY
         try:
-            after = preview_format(self._img, fmt, quality)
+            after = preview_export(self._img, fmt, quality)
         except (ValueError, OSError) as exc:
             self.set_status(f"Lỗi xem trước: {exc}", "red")
             return
         self.preview.set_before(self._img)
         self.preview.set_after(after)
         after.close()
-        if fmt == _LOSSLESS_FMT:
+        if fmt == ".png":
             self.set_status("Xem trước PNG (lossless, không mất chi tiết)")
         else:
             self.set_status(f"Xem trước {fmt} ở chất lượng {quality}%")
@@ -187,21 +190,19 @@ class Tab(ToolTab):
             messagebox.showwarning("Thiếu file", "Hãy chọn ảnh trước.")
             return
         fmt = self._current_fmt()
-        if not fmt:
-            messagebox.showwarning("Thiếu định dạng", "Hãy chọn định dạng đích.")
-            return
         try:
             quality = parse_quality(str(self._current_quality()))
+            sizes = parse_sizes(self.size_var.get()) if fmt == ".ico" else None
         except ValueError as exc:
-            self.fail("Lỗi chất lượng", exc)
+            self.fail("Lỗi tham số", exc)
             return
-        self.set_status("Đang đổi định dạng...")
+        self.set_status("Đang xuất...")
         try:
-            dest = run_format_convert(
-                source, out_dir=OUTPUT_CONVERT_FORMAT, fmt=fmt, quality=quality
+            dest = run_export(
+                source, out_dir=OUTPUT_EXPORT, fmt=fmt, quality=quality, sizes=sizes
             )
         except (ValueError, FileNotFoundError, OSError) as exc:
-            self.fail("Lỗi đổi định dạng", exc)
+            self.fail("Lỗi xuất ảnh", exc)
             return
         self.done(f"Xong: {Path(dest).name}")
         self.hint.configure(text=f"Đã lưu: {dest}")

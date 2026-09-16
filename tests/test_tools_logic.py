@@ -9,7 +9,7 @@ from gui.base_tool import ToolTab
 from gui.theme import next_theme
 from service import convert, foldericon
 from tools import registry
-from tools.convert_tool.controller import parse_sizes, run_conversion
+from tools.export_tool.controller import parse_quality, parse_sizes, run_export
 from tools.foldericon_tool.controller import parse_new_name, run_apply
 from tools.junction_tool.controller import join_link_path, parse_inputs, run_create
 from tools.rounded_tool.controller import parse_radius, run_round
@@ -39,9 +39,21 @@ def test_resolve_output_path_custom_ext_and_dir():
 
 
 def test_run_conversion_creates_file(tmp_path, png_rgb):
-    out = run_conversion(png_rgb, tmp_path / "dest", [16, 32])
+    out = run_export(png_rgb, tmp_path / "dest", fmt=".ico", sizes=[16, 32])
     assert Path(out).is_file()
     assert Path(out).name == "rgb.ico"
+
+
+def test_run_export_image_format(tmp_path, png_rgb):
+    out = run_export(png_rgb, tmp_path / "dest", fmt=".jpg", quality=80)
+    assert Path(out).is_file()
+    assert Path(out).suffix == ".jpg"
+
+
+def test_parse_quality_rejects_out_of_range():
+    with pytest.raises(ValueError):
+        parse_quality("0")
+    assert parse_quality("100") == 100
 
 
 def test_run_apply_chains_install_then_set(tmp_path, monkeypatch):
@@ -155,13 +167,13 @@ def test_run_create_junction_forwards_readonly(monkeypatch):
 def test_registry_lists_all_tool_tabs():
     specs = registry.get_tools()
     assert [s.title for s in specs] == [
-        "PNG → ICO",
-        "Đổi định dạng",
+        "Xuất ảnh",
         "Bo góc",
         "Resize icon",
         "Tách sprite",
         "Sprite → ICO",
         "Icon thư mục",
         "Junction",
+        "Build Launcher",
     ]
     assert all(issubclass(s.tab_class, ToolTab) for s in specs)

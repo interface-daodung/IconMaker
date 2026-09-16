@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace IconMakerLauncher;
+namespace __APP_NAME__;
 
 sealed class ServerLogForm : Form
 {

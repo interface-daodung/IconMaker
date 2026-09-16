@@ -106,7 +106,17 @@ Luật 4 trong `AGENTS.md`: mỗi quyết định của người dùng → thêm
 - **[D26] Tool Đổi định dạng ảnh png/jpg/webp:** Đầu vào 1 ảnh (png/jpg/jpeg/webp), đầu ra chọn 1 trong 2 định dạng còn lại, cấm đổi trùng đuôi; `.jpeg` chuẩn hoá về `.jpg`. Output vào `output/convert_format/`. Khi đích là jpg/webp hiện thanh trượt "Chất lượng" mặc định 100% (1..100, thấp = nén mạnh) + preview ảnh sau nén bằng roundtrip encode→decode trong bộ nhớ (`compress_bytes`/`compressed_preview`) để thấy mất chi tiết thật; đích png lossless không nén. Tab "Đổi định dạng" đặt ngay sau "PNG → ICO". CLI `python -m service.format_convert [nguon] [--fmt .webp] [--quality 100]`, target `make convfmt FSRC=... FMT=... QUALITY=...`.
   → Luật 17 (`AGENTS.md` — hợp đồng `service/format_convert.py`); Makefile target `convfmt`; tab mới theo Luật 12.
 
+## 2026-09-14 (gộp tool xuất ảnh)
+
+- **[D28] Gộp "PNG → ICO" + "Đổi định dạng" thành 1 tab "Xuất ảnh":** 1 ảnh vào (png/jpg/jpeg/webp), radio chọn 1 trong 4 đích jpg/png/webp/ico (cho phép trùng đuôi để ghi lại; đích ico nhận mọi ảnh vào qua `convert_image_to_ico`, không giới hạn PNG); output chung `output/export/`; slider chất lượng chỉ bật với jpg/webp, chọn size chỉ bật với ico; CLI `python -m service.export`, `make export SRC=... FMT=... QUALITY=...`; `service/convert.py` + `service/format_convert.py` giữ lại làm khối dựng, xóa 2 package tool cũ.
+  → Luật 17 (`AGENTS.md`).
+
 ## 2026-09-14 (icon thư mục hàng loạt)
 
 - **[D27] Tìm hàng loạt thư mục trùng tên bằng cú pháp `*<tên>`:** Gõ `*MyApp` ở ô Thư mục → nút Tìm quét `C:\Users\inter` khớp tên chính xác không phân biệt hoa/thường, checkbox quét thêm từng ổ đĩa khác, luôn bỏ qua %TEMP%/%AppData% và nhánh dot dưới home (ngoài home cho phép dot), hiện list tick chọn để đặt icon 1 lần cho các thư mục đã chọn.
   → Luật 18 (`AGENTS.md`); module `src/service/folder_search.py`; plan `007-folder-icon.md` mục bổ sung.
+
+## 2026-09-14 (tool build launcher)
+
+- **[D29] Tab "Build Launcher" build exe tray cho thư mục server theo `launcher/README.md`:** Ô thư mục server (dialog mở sẵn `C:\Users\inter\Project`), ô chọn 1 ICO từ dự án (prefill ICO mới nhất `output/icons`), ô nhập tên launcher (bỏ trống = lấy tên thư mục server). Trước khi build, icon được copy vào thư viện `~/OneDrive/Pictures/Icon` đặt tên `<ten-launcher>.ico` rồi mới gọi `launcher/build-launcher.ps1 -ServerDir -Name -Icon -OutDir -Mode`; `.exe` ra `output/launchers/`.
+  → Luật 19 (`AGENTS.md`); module `src/service/launcher.py` + package `src/tools/launcher_tool/`; CLI `python -m service.launcher`, target `make build-launcher SERVER=... ICON=... LNAME=... [MODE=...]`.

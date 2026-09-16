@@ -4,13 +4,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>IconMakerLauncher</AssemblyName>
-    <RootNamespace>IconMakerLauncher</RootNamespace>
-    <Version>1.0.0</Version>
-    <Description>IconMaker tray launcher - chay GUI pythonw, xem log, restart/kill tu tray.</Description>
+    <Nullable>enable</Nullable>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <AssemblyName>__APP_NAME__</AssemblyName>
+    <RootNamespace>__APP_NAME__</RootNamespace>
+    <Version>1.0.0</Version>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>embedded</DebugType>

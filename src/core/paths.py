@@ -16,6 +16,8 @@ OUTPUT_SPRITES = OUTPUT_ROOT / "sprites"
 OUTPUT_ICONS = OUTPUT_ROOT / "icons"
 OUTPUT_RESIZE = OUTPUT_ROOT / "resize"
 OUTPUT_CONVERT_FORMAT = OUTPUT_ROOT / "convert_format"
+OUTPUT_EXPORT = OUTPUT_ROOT / "export"
+OUTPUT_LAUNCHER = OUTPUT_ROOT / "launchers"
 APP_ICON = Path("assets/icons/IconMaker.ico")
 
 
