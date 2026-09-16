@@ -128,12 +128,12 @@ sealed class ServerProcess : IDisposable
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 2)
         {
-            LogReceived?.Invoke($"[Launcher] Lệnh '{AppConfig.CommandFile}' không tìm thấy trực tiếp, chuyển sang chạy qua cmd.exe /c...");
+            LogReceived?.Invoke($"[Launcher] Lenh '{AppConfig.CommandFile}' khong tim thay truc tiep, chuyen sang chay qua cmd.exe /c...");
             StartViaCmdFallback();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Không khởi động được server:\n{ex.Message}", AppConfig.AppName,
+            MessageBox.Show($"Khong khoi dong duoc server:\n{ex.Message}", AppConfig.AppName,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             LogReceived?.Invoke(AppConfig.StartFailedLog(ex.ToString()));
         }
@@ -237,7 +237,7 @@ sealed class ServerProcess : IDisposable
             _process = null;
             _trackedPid = null;
             DeletePidFile();
-            LogReceived?.Invoke($"[Launcher] Đã dừng toàn bộ tiến trình PID={pid} thành công.");
+            LogReceived?.Invoke($"[Launcher] Da dung toan bo tien trinh PID={pid} thanh cong.");
         }
         else
         {
@@ -310,7 +310,7 @@ sealed class ServerProcess : IDisposable
                         var oldProc = Process.GetProcessById(oldPid);
                         if (oldProc != null && !oldProc.HasExited)
                         {
-                            LogReceived?.Invoke($"[Launcher] Phát hiện tiến trình cũ PID={oldPid} từ lần chạy trước, đang dọn dẹp...");
+                            LogReceived?.Invoke($"[Launcher] Phat hien tien trinh cu PID={oldPid} tu lan chay truoc, dang don dep...");
                             var psi = new ProcessStartInfo
                             {
                                 FileName = "taskkill",

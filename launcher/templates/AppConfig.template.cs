@@ -10,7 +10,7 @@ static class AppConfig
     public const string AppName = "__APP_NAME__";
     public const string DisplayName = "__DISPLAY_NAME__";
     public const string MutexName = "__MUTEX_NAME__";
-    public const string Description = "Tray Launcher cho __DISPLAY_NAME__ - chạy make run ẩn, xem log, quản lý PID";
+    public const string Description = "Tray Launcher cho __DISPLAY_NAME__ - chay make run an, xem log, quan ly PID";
 
     // ===== Server =====
     public const string ProjectDir = @"__PROJECT_DIR__";
@@ -34,8 +34,8 @@ static class AppConfig
     public const string IconRelativePath = "Assets/icon.ico";
 
     // ===== Messages =====
-    public const string MsgAlreadyRunning = "__DISPLAY_NAME__ đã đang chạy (kiểm tra khay hệ thống - System Tray).";
-    public const string MsgNotFoundDir = "Không tìm thấy thư mục server:";
+    public const string MsgAlreadyRunning = "__DISPLAY_NAME__ da dang chay (kiem tra khay he thong - System Tray).";
+    public const string MsgNotFoundDir = "Khong tim thay thu muc server:";
 
     // Menu labels
     public const string MenuOpenLog = "Open Log";
@@ -45,10 +45,10 @@ static class AppConfig
     public const string MenuExit = "Exit";
 
     // Port & Process logs
-    public static string PortBusyLine1 => $"[Launcher] Cổng {Port} đã có tiến trình khác đang lắng nghe.";
-    public static string PortBusyLine2 => $"[Launcher] Bỏ qua khởi động mới — hãy kiểm tra lại hoặc Tray → Restart Server.";
-    public static string PortBusyLine3 => $"[Launcher] Kill tiến trình giữ cổng: netstat -ano | findstr {Port} rồi taskkill /PID <PID> /F";
-    public const string PortStillBusy = "Cổng vẫn bận sau kill — đang tìm PID giữ cổng để dọn dẹp...";
+    public static string PortBusyLine1 => $"[Launcher] Cong {Port} da co tien trinh khac dang lang nghe.";
+    public static string PortBusyLine2 => $"[Launcher] Bo qua khoi dong moi - hay kiem tra lai hoac Tray -> Restart Server.";
+    public static string PortBusyLine3 => $"[Launcher] Kill tien trinh giu cong: netstat -ano | findstr {Port} roi taskkill /PID <PID> /F";
+    public const string PortStillBusy = "Cong van ban sau kill - dang tim PID giu cong de don dep...";
     public static string PortHolderLog(int pid) => $"[Launcher] taskkill /PID {pid} /F (port holder {Port})";
 
     // Lifecycle logs
@@ -59,6 +59,6 @@ static class AppConfig
     public static string StartFailedLog(string ex) => $"[Launcher] Start failed: {ex}";
 
     // Balloon notifications
-    public static string BalloonPortBusy => $"Cổng {Port} đang bận. Mở log hoặc Tray → Restart Server.";
-    public static string BalloonExited(int code) => $"Máy chủ đã dừng (exit code {code}). Vào Tray → Restart Server để bật lại.";
+    public static string BalloonPortBusy => $"Cong {Port} dang ban. Mo log hoac Tray -> Restart Server.";
+    public static string BalloonExited(int code) => $"May chu da dung (exit code {code}). Vao Tray -> Restart Server de bat lai.";
 }

@@ -1,32 +1,32 @@
 ﻿<#
 .SYNOPSIS
-    build-launcher.ps1 - Tự động tạo Launcher Tray Icon (.exe) chạy "make run" cho bất kỳ server folder nào.
+    build-launcher.ps1 - Tu dong tao Launcher Tray Icon (.exe) chay "make run" cho bat ky server folder nao.
 
 .DESCRIPTION
-    Script chạy tuần tự 4 bước:
-      1. dotnet new winforms để tạo dự án tạm thời
-      2. Áp dụng bộ template C#, nhúng icon và tạo cấu hình AppConfig.cs cho make run
-      3. Biên dịch và publish Single-File .exe (win-x64)
-      4. Thu gom file .exe đầu ra và dọn dẹp xóa toàn bộ thư mục dự án tạm
+    Script chay tuan tu 4 buoc:
+      1. dotnet new winforms de tao du an tam thoi
+      2. Ap dung bo template C#, nhung icon va tao cau hinh AppConfig.cs cho make run
+      3. Bien dich va publish Single-File .exe (win-x64)
+      4. Thu gom file .exe dau ra va don dep xoa toan bo thu muc du an tam
 
 .PARAMETER ServerDir
-    Đường dẫn đến thư mục server (nơi sẽ chạy lệnh "make run").
-    Tham số vị trí đầu tiên hoặc qua -ServerDir.
+    Duong dan den thu muc server (noi se chay lenh "make run").
+    Tham so vi tri dau tien hoac qua -ServerDir.
 
 .PARAMETER Name
-    Tên của Launcher App (hoặc --name). Nếu không truyền, mặc định lấy tên thư mục server.
+    Ten cua Launcher App (hoac --name). Neu khong truyen, mac dinh lay ten thu muc server.
 
 .PARAMETER Icon
-    Đường dẫn đến file .ico làm icon ứng dụng (hoặc --icon). Mặc định dùng ./icon.ico.
+    Duong dan den file .ico lam icon ung dung (hoac --icon). Mac dinh dung ./icon.ico.
 
 .PARAMETER OutDir
-    Thư mục chứa file .exe đầu ra. Mặc định là ./dist.
+    Thu muc chua file .exe dau ra. Mac dinh la ./dist.
 
 .PARAMETER Mode
-    Chế độ publish: "standalone" (mặc định, tự kèm runtime) hoặc "framework" (nhẹ hơn, dùng runtime máy).
+    Che do publish: "standalone" (mac dinh, tu kem runtime) hoac "framework" (nhe hon, dung runtime may).
 
 .PARAMETER Port
-    Cổng của server (tùy chọn, dùng để kiểm tra cổng bận). Mặc định là 0 (không kiểm tra).
+    Cong cua server (tuy chon, dung de kiem tra cong ban). Mac dinh la 0 (khong kiem tra).
 
 .EXAMPLE
     .\build-launcher.ps1 -ServerDir "D:\Projects\MyServer"
@@ -63,7 +63,7 @@ param(
     [string[]]$RemainingArgs
 )
 
-# Hỗ trợ parse cờ kiểu GNU (--name, --icon, --server) và xử lý đối số còn lại
+# Ho tro parse co kieu GNU (--name, --icon, --server) va xu ly doi so con lai
 if ($RemainingArgs) {
     for ($i = 0; $i -lt $RemainingArgs.Count; $i++) {
         $arg = $RemainingArgs[$i]
@@ -93,37 +93,37 @@ $root = $PSScriptRoot
 if (-not $root) { $root = (Get-Location).Path }
 
 Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "   TỰ ĐỘNG TẠO TRAY LAUNCHER .EXE (MAKE RUN & PID TRACKING)     " -ForegroundColor Cyan
+Write-Host "   TU DONG TAO TRAY LAUNCHER .EXE (MAKE RUN & PID TRACKING)     " -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
 
-# 1. Kiểm tra đầu vào ServerDir
+# 1. Kiem tra dau vao ServerDir
 if (-not $ServerDir) {
-    Write-Host "Chưa chỉ định thư mục server." -ForegroundColor Yellow
-    $ServerDir = Read-Host "Nhập đường dẫn đến thư mục server (hoặc kéo thả folder vào đây)"
+    Write-Host "Chua chi dinh thu muc server." -ForegroundColor Yellow
+    $ServerDir = Read-Host "Nhap duong dan den thu muc server (hoac keo tha folder vao day)"
     if ($ServerDir) {
         $ServerDir = $ServerDir.Trim().Trim('"').Trim("'")
     }
 }
 
 if (-not $ServerDir -or -not (Test-Path $ServerDir)) {
-    Write-Host "Lỗi: Thư mục server không tồn tại: '$ServerDir'" -ForegroundColor Red
+    Write-Host "Loi: Thu muc server khong ton tai: '$ServerDir'" -ForegroundColor Red
     exit 1
 }
 
 $fullServerDir = [System.IO.Path]::GetFullPath($ServerDir)
 $folderName = Split-Path $fullServerDir -Leaf
 
-# 2. Xử lý tên ứng dụng
+# 2. Xu ly ten ung dung
 if (-not $Name) {
     $Name = $folderName
 }
 $DisplayName = $Name
-# Làm sạch tên project cho C# identifier (chỉ gồm chữ cái, số, gạch dưới)
+# Lam sach ten project cho C# identifier (chi gom chu cai, so, gach duoi)
 $CleanName = $Name -replace '[^a-zA-Z0-9_]', ''
 if ($CleanName -match '^[0-9]') { $CleanName = "App_$CleanName" }
 if (-not $CleanName) { $CleanName = "ServerLauncher" }
 
-# 3. Xử lý Icon
+# 3. Xu ly Icon
 if (-not $Icon) {
     $defaultIcon = Join-Path $root "icon.ico"
     if (Test-Path $defaultIcon) {
@@ -134,20 +134,20 @@ if (-not $Icon) {
     if (Test-Path $checkIcon) { $Icon = $checkIcon }
 }
 
-# 4. Xử lý OutDir
+# 4. Xu ly OutDir
 if (-not $OutDir) {
     $OutDir = Join-Path $root "dist"
 }
 $finalOutDir = [System.IO.Path]::GetFullPath($OutDir)
 
-# 5. Đường dẫn các thư mục làm việc tạm thời
+# 5. Duong dan cac thu muc lam viec tam thoi
 $scriptsDir = Join-Path $root "scripts"
 $templatesDir = Join-Path $root "templates"
 $randomId = [Guid]::NewGuid().ToString("N").Substring(0, 8)
 $tempDir = Join-Path $root ".tmp_build_${CleanName}_${randomId}"
 $publishTempDir = Join-Path $root ".tmp_pub_${CleanName}_${randomId}"
 
-Write-Host "Thông tin cấu hình:" -ForegroundColor Green
+Write-Host "Thong tin cau hinh:" -ForegroundColor Green
 Write-Host " - Server Directory : $fullServerDir"
 Write-Host " - Command          : make run"
 Write-Host " - App Name         : $CleanName ($DisplayName)"
@@ -158,12 +158,12 @@ if ($Port -gt 0) { Write-Host " - Port             : $Port" }
 Write-Host "----------------------------------------------------------------"
 
 try {
-    # BƯỚC 1: Tạo dự án mới với dotnet new winforms
+    # BUOC 1: Tao du an moi voi dotnet new winforms
     $s1 = Join-Path $scriptsDir "01-create-project.ps1"
     & $s1 -ProjectName $CleanName -TempDir $tempDir
-    if ($LASTEXITCODE -ne 0) { throw "Bước 1 thất bại." }
+    if ($LASTEXITCODE -ne 0) { throw "Buoc 1 that bai." }
 
-    # BƯỚC 2: Áp dụng templates C#, tạo AppConfig.cs
+    # BUOC 2: Ap dung templates C#, tao AppConfig.cs
     $s2 = Join-Path $scriptsDir "02-apply-templates.ps1"
     & $s2 -ProjectName $CleanName `
           -DisplayName $DisplayName `
@@ -174,45 +174,45 @@ try {
           -Port $Port `
           -CommandFile "make" `
           -CommandArgs "run"
-    if ($LASTEXITCODE -ne 0) { throw "Bước 2 thất bại." }
+    if ($LASTEXITCODE -ne 0) { throw "Buoc 2 that bai." }
 
-    # BƯỚC 3: Biên dịch và Publish Single-File .exe
+    # BUOC 3: Bien dich va Publish Single-File .exe
     $s3 = Join-Path $scriptsDir "03-publish-exe.ps1"
     & $s3 -ProjectName $CleanName `
           -TempDir $tempDir `
           -PublishOutDir $publishTempDir `
           -Mode $Mode
-    if ($LASTEXITCODE -ne 0) { throw "Bước 3 thất bại." }
+    if ($LASTEXITCODE -ne 0) { throw "Buoc 3 that bai." }
 
-    # BƯỚC 4: Chuyển .exe ra dist và dọn dẹp xóa thư mục tạm
+    # BUOC 4: Chuyen .exe ra dist va don dep xoa thu muc tam
     if (-not $KeepTemp) {
         $s4 = Join-Path $scriptsDir "04-cleanup-project.ps1"
         & $s4 -ProjectName $CleanName `
               -TempDir $tempDir `
               -PublishOutDir $publishTempDir `
               -FinalOutDir $finalOutDir
-        if ($LASTEXITCODE -ne 0) { throw "Bước 4 thất bại." }
+        if ($LASTEXITCODE -ne 0) { throw "Buoc 4 that bai." }
     } else {
-        Write-Host "  -> [KeepTemp] Giữ lại thư mục tạm: $tempDir" -ForegroundColor Yellow
+        Write-Host "  -> [KeepTemp] Giu lai thu muc tam: $tempDir" -ForegroundColor Yellow
         Copy-Item -Path (Join-Path $publishTempDir "$CleanName.exe") -Destination (Join-Path $finalOutDir "$CleanName.exe") -Force
     }
 
     $finalExePath = Join-Path $finalOutDir "$CleanName.exe"
     Write-Host "`n================================================================" -ForegroundColor Green
-    Write-Host " HOÀN TẤT TẠO TRAY LAUNCHER THÀNH CÔNG!" -ForegroundColor Green
-    Write-Host " File EXE đầu ra: $finalExePath" -ForegroundColor Cyan
+    Write-Host " HOAN TAT TAO TRAY LAUNCHER THANH CONG!" -ForegroundColor Green
+    Write-Host " File EXE dau ra: $finalExePath" -ForegroundColor Cyan
     if (Test-Path $finalExePath) {
         $sizeMB = [math]::Round((Get-Item $finalExePath).Length / 1MB, 2)
-        Write-Host " Kích thước      : $sizeMB MB" -ForegroundColor Gray
+        Write-Host " Kich thuoc      : $sizeMB MB" -ForegroundColor Gray
     }
-    Write-Host " Thư mục dự án tạm đã được dọn dẹp sạch sẽ." -ForegroundColor Green
+    Write-Host " Thu muc du an tam da duoc don dep sach se." -ForegroundColor Green
     Write-Host "================================================================" -ForegroundColor Green
 
 } catch {
-    Write-Host "`nĐÃ XẢY RA LỖI TRONG QUÁ TRÌNH TẠO DỰ ÁN:" -ForegroundColor Red
+    Write-Host "`nDA XAY RA LOI TRONG QUA TRINH TAO DU AN:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
 
-    # Dọn dẹp an toàn khi lỗi
+    # Don dep an toan khi loi
     if (-not $KeepTemp) {
         if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
         if (Test-Path $publishTempDir) { Remove-Item -Path $publishTempDir -Recurse -Force -ErrorAction SilentlyContinue }

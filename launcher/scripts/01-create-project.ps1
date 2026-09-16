@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    01-create-project.ps1 - Khởi tạo dự án WinForms mới bằng dotnet new vào thư mục tạm.
+    01-create-project.ps1 - Khoi tao du an WinForms moi bang dotnet new vao thu muc tam.
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -12,24 +12,24 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host " [Bước 1/4] Khởi tạo dự án mới bằng dotnet new winforms..." -ForegroundColor Cyan
+Write-Host " [Buoc 1/4] Khoi tao du an moi bang dotnet new winforms..." -ForegroundColor Cyan
 
 if (Test-Path $TempDir) {
-    Write-Host "  -> Dọn dẹp thư mục tạm cũ: $TempDir" -ForegroundColor DarkGray
+    Write-Host "  -> Don dep thu muc tam cu: $TempDir" -ForegroundColor DarkGray
     Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
-Write-Host "  -> Đang chạy: dotnet new winforms -n `"$ProjectName`" -o `"$TempDir`"" -ForegroundColor DarkGray
+Write-Host "  -> Dang chay: dotnet new winforms -n `"$ProjectName`" -o `"$TempDir`"" -ForegroundColor DarkGray
 dotnet new winforms -n "$ProjectName" -o "$TempDir" --framework net8.0
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Lệnh dotnet new thất bại với mã lỗi $LASTEXITCODE"
+    Write-Error "Lenh dotnet new that bai voi ma loi $LASTEXITCODE"
     exit $LASTEXITCODE
 }
 
-# Xóa các file Form1 mặc định do dotnet new sinh ra để tránh xung đột
+# Xoa cac file Form1 mac dinh do dotnet new sinh ra de tranh xung dot
 $defaultFiles = @("Form1.cs", "Form1.Designer.cs", "Form1.resx", "Program.cs")
 foreach ($f in $defaultFiles) {
     $targetPath = Join-Path $TempDir $f
@@ -38,5 +38,5 @@ foreach ($f in $defaultFiles) {
     }
 }
 
-Write-Host "  -> Khởi tạo dự án thành công tại: $TempDir" -ForegroundColor Green
+Write-Host "  -> Khoi tao du an thanh cong tai: $TempDir" -ForegroundColor Green
 exit 0

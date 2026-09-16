@@ -1,4 +1,4 @@
-"""Controller Build Launcher: giá trị mặc định + gọi service.launcher."""
+"""Controller Build Launcher: gia tri mac dinh + goi service.launcher."""
 
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from service import launcher
 
 
 def default_server_root() -> str:
-    """Thư mục dialog chọn server mở sẵn (theo yêu cầu: C:\\Users\\inter\\Project)."""
+    """Thu muc dialog chon server mo san (theo yeu cau: C:\\Users\\inter\\Project)."""
     if launcher.DEFAULT_SERVER_ROOT.is_dir():
         return str(launcher.DEFAULT_SERVER_ROOT)
     return str(Path.home())
 
 
 def icons_default_dir() -> str:
-    """Thư mục output/icons tuyệt đối để dialog chọn icon mở thẳng vào."""
+    """Thu muc output/icons tuyet doi de dialog chon icon mo thang vao."""
     root = Path(__file__).resolve().parents[3]
     candidate = root / OUTPUT_ICONS
     if candidate.is_dir():
@@ -27,7 +27,7 @@ def icons_default_dir() -> str:
 
 
 def suggest_name(server_dir: str | None) -> str:
-    """Gợi ý tên launcher = tên thư mục server (giống build-launcher.ps1)."""
+    """Goi y ten launcher = ten thu muc server (giong build-launcher.ps1)."""
     raw = str(server_dir or "").strip()
     if not raw:
         return ""
@@ -35,11 +35,11 @@ def suggest_name(server_dir: str | None) -> str:
 
 
 def parse_launcher_name(raw: str | None, server_dir: str | None = None) -> str:
-    """Tên user nhập (rỗng = lấy tên thư mục server), chuẩn hoá qua service."""
+    """Ten user nhap (rong = lay ten thu muc server), chuan hoa qua service."""
     if raw is None or not str(raw).strip():
         fallback = suggest_name(server_dir)
         if not fallback:
-            raise ValueError("Hãy nhập tên launcher (vd MyServer).")
+            raise ValueError("Hay nhap ten launcher (vd MyServer).")
         return launcher.sanitize_launcher_name(fallback)
     return launcher.sanitize_launcher_name(raw)
 
@@ -50,5 +50,5 @@ def run_build(
     app_name: str | None,
     on_output: Callable[[str], None] | None = None,
 ) -> str:
-    """Cài icon vào thư viện rồi build launcher, trả về đường dẫn .exe."""
+    """Cai icon vao thu vien roi build launcher, tra ve duong dan .exe."""
     return launcher.run_build(server_dir, icon_path, app_name, on_output=on_output)

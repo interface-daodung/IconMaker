@@ -28,16 +28,16 @@ def sanitize_launcher_name(name: str | Path | None) -> str:
     """Tên launcher hiển thị: cắt trắng đầu/cuối, cấm rỗng và ký tự Windows."""
     raw = str(name or "").strip()
     if not raw:
-        raise ValueError("Hãy nhập tên launcher (vd MyServer).")
+        raise ValueError("Hay nhap ten launcher (vd MyServer).")
     if any(ch in _INVALID_NAME_CHARS for ch in raw):
-        raise ValueError(f"Tên launcher chứa ký tự cấm <>:\"/\\|?*: {raw!r}")
+        raise ValueError(f"Ten launcher chua ky tu cam <>:\"/\\|?*: {raw!r}")
     if any(ord(ch) < 32 for ch in raw):
-        raise ValueError(f"Tên launcher chứa ký tự điều khiển: {raw!r}")
+        raise ValueError(f"Ten launcher chua ky tu dieu khien: {raw!r}")
     return raw
 
 
 def project_clean_name(name: str) -> str:
-    """Tên project C# (giống build-launcher.ps1: chỉ giữ chữ/số/gạch dưới)."""
+    """Ten project C# (giong build-launcher.ps1: chi giu chu/so/gach duoi)."""
     clean = re.sub(r"[^a-zA-Z0-9_]", "", name)
     if not clean:
         return "ServerLauncher"
@@ -47,24 +47,24 @@ def project_clean_name(name: str) -> str:
 
 
 def validate_server_dir(server_dir: str | Path) -> Path:
-    """Thư mục server phải tồn tại và là thư mục, trả về đường dẫn tuyệt đối."""
+    """Thu muc server phai ton tai va la thu muc, tra ve duong dan tuyet doi."""
     raw = str(server_dir or "").strip()
     if not raw:
-        raise ValueError("Hãy chọn thư mục server (trong C:\\Users\\inter\\Project).")
+        raise ValueError("Hay chon thu muc server (trong C:\\Users\\inter\\Project).")
     path = Path(raw).expanduser().resolve()
     if not path.is_dir():
-        raise FileNotFoundError(f"Không tìm thấy thư mục server: {path}")
+        raise FileNotFoundError(f"Khong tim thay thu muc server: {path}")
     return path
 
 
 def build_script_path() -> Path:
-    """Đường dẫn tuyệt đối tới launcher/build-launcher.ps1 (neo theo repo root)."""
+    """Duong dan tuyet doi toi launcher/build-launcher.ps1 (neo theo repo root)."""
     root = Path(__file__).resolve().parents[2]
     return root / "launcher" / "build-launcher.ps1"
 
 
 def default_icon() -> Path | None:
-    """ICO mới nhất trong output/icons (neo theo repo root), chưa có thì None."""
+    """ICO moi nhat trong output/icons (neo theo repo root), chua co thi None."""
     root = Path(__file__).resolve().parents[2]
     candidate = root / OUTPUT_ICONS
     if not candidate.is_dir():
@@ -79,9 +79,9 @@ def install_build_icon(
     app_name: str,
     store_dir: str | Path | None = None,
 ) -> Path:
-    """Copy icon vào thư viện ổn định, đặt tên theo launcher (`<ten>.ico`).
+    """Copy icon vao thu vien on dinh, dat ten theo launcher (`<ten>.ico`).
 
-    Tên launcher không đặt được thành tên file thì giữ tên gốc của icon.
+    Ten launcher khong dat duoc thanh ten file thi giu ten goc cua icon.
     """
     try:
         new_name = foldericon.sanitize_icon_name(app_name)
@@ -91,11 +91,11 @@ def install_build_icon(
 
 
 def _hidden_popen_kwargs() -> dict:
-    """Tham số ẩn cửa sổ console của tiến trình con trên Windows.
+    """Tham so an cua so console cua tien trinh con tren Windows.
 
-    powershell.exe là console-app nên mặc định tự bật 1 cửa sổ console riêng
-    (kể cả khi GUI chạy bằng pythonw) — đặt CREATE_NO_WINDOW + SW_HIDE để
-    log chỉ hiện trong tab GUI, không nháy console ngoài.
+    powershell.exe la console-app nen mac dinh tu bat 1 cua so console rieng
+    (ke ca khi GUI chay bang pythonw) - dat CREATE_NO_WINDOW + SW_HIDE de
+    log chi hien trong tab GUI, khong nhay console ngoai.
     """
     if sys.platform != "win32":
         return {}
@@ -106,7 +106,7 @@ def _hidden_popen_kwargs() -> dict:
 
 
 def stream_command(cmd: list[str], on_output: Callable[[str], None]) -> int:
-    """Chạy `cmd`, gọi `on_output` với từng dòng log (stdout+stderr), trả về mã thoát."""
+    """Chay `cmd`, goi `on_output` voi tung dong log (stdout+stderr), tra ve ma thoat."""
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -130,9 +130,9 @@ def build_command(
     out_dir: str | Path | None = None,
     mode: str = DEFAULT_MODE,
 ) -> list[str]:
-    """Câu lệnh powershell gọi build-launcher.ps1 với đủ tham số."""
+    """Cau lenh powershell goi build-launcher.ps1 voi du tham so."""
     if mode not in BUILD_MODES:
-        raise ValueError(f"Mode phải là một trong {list(BUILD_MODES)}, nhận được {mode!r}")
+        raise ValueError(f"Mode phai la mot trong {list(BUILD_MODES)}, nhan duoc {mode!r}")
     out = Path(out_dir) if out_dir else OUTPUT_LAUNCHER
     return [
         "powershell",
@@ -162,12 +162,12 @@ def run_build(
     mode: str = DEFAULT_MODE,
     on_output: Callable[[str], None] | None = None,
 ) -> str:
-    """Validate → cài icon vào thư viện → chạy build, trả về đường dẫn .exe.
+    """Validate -> cai icon vao thu vien -> chay build, tra ve duong dan .exe.
 
-    - `icon_path` trống thì dùng ICO mới nhất trong output/icons.
-    - `app_name` trống thì lấy tên thư mục server (giống build-launcher.ps1).
-    - `on_output` (vd tab GUI) nhận từng dòng log build theo thời gian thực;
-      bỏ trống thì gom log và chỉ hiện khi build lỗi (dùng cho CLI).
+    - `icon_path` trong thi dung ICO moi nhat trong output/icons.
+    - `app_name` trong thi lay ten thu muc server (giong build-launcher.ps1).
+    - `on_output` (vd tab GUI) nhan tung dong log build theo thoi gian thuc;
+      bo trong thi gom log va chi hien khi build loi (dung cho CLI).
     """
     server = validate_server_dir(server_dir)
     icon_src = str(icon_path or "").strip() if icon_path else ""
@@ -175,7 +175,7 @@ def run_build(
         latest = default_icon()
         if latest is None:
             raise FileNotFoundError(
-                f"Chưa có ICO nào trong {OUTPUT_ICONS} — chạy icons trước hoặc chọn 1 file .ico."
+                f"Chua co ICO nao trong {OUTPUT_ICONS} - chay icons truoc hoac chon 1 file .ico."
             )
         icon_src = str(latest)
     name = sanitize_launcher_name(app_name) if str(app_name or "").strip() else server.name
@@ -197,12 +197,12 @@ def run_build(
         returncode = stream_command(cmd, collect)
         detail = "\n".join(lines).strip()
     if returncode != 0:
-        raise RuntimeError(f"Build launcher thất bại (mã {returncode}): {detail}")
+        raise RuntimeError(f"Build launcher that bai (ma {returncode}): {detail}")
     out = Path(out_dir) if out_dir else OUTPUT_LAUNCHER
     exe = out / f"{project_clean_name(name)}.exe"
     if not exe.is_file():
         resolved = Path(out).resolve() / f"{project_clean_name(name)}.exe"
         if not resolved.is_file():
-            raise RuntimeError(f"Build xong nhưng không thấy file: {exe}")
+            raise RuntimeError(f"Build xong nhung khong thay file: {exe}")
         return str(resolved)
     return str(exe)

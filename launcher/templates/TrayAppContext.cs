@@ -39,7 +39,7 @@ sealed class TrayAppContext : ApplicationContext
         {
             _isIntentionalStop = true;
             _server.Kill();
-            AppendSystem("Server đã dừng theo yêu cầu của người dùng.");
+            AppendSystem("Server da dung theo yeu cau cua nguoi dung.");
         });
         var exitItem = new ToolStripMenuItem(AppConfig.MenuExit, null, (_, __) =>
         {
@@ -187,7 +187,7 @@ sealed class TrayAppContext : ApplicationContext
         }
         else if (code != 0)
         {
-            _tray.BalloonTipText = $"Máy chủ bị dừng bất thường (mã {code}) hoặc bị tắt bởi ứng dụng khác!";
+            _tray.BalloonTipText = $"May chu bi dung bat thuong (ma {code}) hoac bi tat boi ung dung khac!";
             _tray.ShowBalloonTip(4000);
         }
     }

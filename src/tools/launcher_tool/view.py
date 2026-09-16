@@ -1,4 +1,4 @@
-"""View tab build launcher tray (.exe) cho 1 thư mục server."""
+"""View tab build launcher tray (.exe) cho 1 thu muc server."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ class Tab(ToolTab):
     def build(self) -> None:
         self.row_server = FileRow(
             self,
-            "Thư mục:",
+            "Thu muc:",
             mode="dir",
-            dialog_title="Chọn thư mục server (chứa app chạy make run)",
+            dialog_title="Chon thu muc server (chua app chay make run)",
             initialdir=default_server_root(),
         )
         self.row_server.pack(fill="x", padx=10, pady=4)
@@ -36,7 +36,7 @@ class Tab(ToolTab):
             self,
             "File ICO:",
             filetypes=[("ICO icons", "*.ico"), ("All files", "*.*")],
-            dialog_title="Chọn icon cho launcher (sẽ copy lên thư viện Icon)",
+            dialog_title="Chon icon cho launcher (se copy len thu vien Icon)",
             initialdir=icons_dir,
         )
         latest = newest_file(icons_dir, ".ico")
@@ -44,7 +44,7 @@ class Tab(ToolTab):
         self.row_icon.pack(fill="x", padx=10, pady=4)
         name_frame = ctk.CTkFrame(self, fg_color="transparent")
         name_frame.pack(fill="x", padx=10, pady=4)
-        ctk.CTkLabel(name_frame, text="Tên launcher:", width=90, anchor="w").pack(
+        ctk.CTkLabel(name_frame, text="Ten launcher:", width=90, anchor="w").pack(
             side="left"
         )
         self.name_var = ctk.StringVar()
@@ -52,12 +52,12 @@ class Tab(ToolTab):
         ctk.CTkEntry(
             name_frame,
             textvariable=self.name_var,
-            placeholder_text="vd MyServer (bỏ trống = lấy tên thư mục)",
+            placeholder_text="vd MyServer (bo trong = lay ten thu muc)",
         ).pack(side="left", fill="x", expand=True, padx=6)
         self.row_server.var.trace_add("write", lambda *_: self._sync_name())
         ctk.CTkLabel(
             self,
-            text="Icon được copy vào thư viện Icon rồi mới build; file .exe ra output/launchers/.",
+            text="Icon duoc copy vao thu vien Icon roi moi build; file .exe ra output/launchers/.",
             anchor="w",
         ).pack(fill="x", padx=10, pady=(0, 2))
         self.build_btn = ctk.CTkButton(
@@ -79,24 +79,24 @@ class Tab(ToolTab):
         name = self.name_var.get().strip() or suggest_name(server)
         if not server:
             messagebox.showwarning(
-                "Thiếu thông tin", "Hãy chọn thư mục server cần build launcher."
+                "Thieu thong tin", "Hay chon thu muc server can build launcher."
             )
             return
         if not icon or Path(icon).is_dir():
             messagebox.showwarning(
-                "Thiếu thông tin", "Hãy chọn 1 file .ico làm icon launcher."
+                "Thieu thong tin", "Hay chon 1 file .ico lam icon launcher."
             )
             return
         if Path(icon).suffix.lower() != ".ico":
-            messagebox.showerror("Sai định dạng", "File icon phải là .ico.")
+            messagebox.showerror("Sai dinh dang", "File icon phai la .ico.")
             return
         if not name:
             messagebox.showwarning(
-                "Thiếu thông tin", "Hãy nhập tên launcher (vd MyServer)."
+                "Thieu thong tin", "Hay nhap ten launcher (vd MyServer)."
             )
             return
         self.build_btn.configure(state="disabled")
-        self.set_status("Đang build launcher (mất vài phút)...")
+        self.set_status("Dang build launcher (mat vai phut)...")
         self._clear_log()
         threading.Thread(
             target=self._worker, args=(server, icon, name), daemon=True
@@ -125,10 +125,10 @@ class Tab(ToolTab):
 
     def _failed(self, detail: str) -> None:
         self.build_btn.configure(state="normal")
-        self.set_status("Thất bại", "red")
-        messagebox.showerror("Build launcher thất bại", detail)
+        self.set_status("That bai", "red")
+        messagebox.showerror("Build launcher that bai", detail)
 
     def _succeeded(self, exe: str) -> None:
         self.build_btn.configure(state="normal")
-        self.done(f"Đã build: {exe}")
-        messagebox.showinfo("Hoàn tất", f"Launcher đã build:\n{exe}")
+        self.done(f"Da build: {exe}")
+        messagebox.showinfo("Hoan tat", f"Launcher da build:\n{exe}")

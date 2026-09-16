@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    04-cleanup-project.ps1 - Chuyển file .exe về thư mục đích và xóa sạch toàn bộ dự án tạm.
+    04-cleanup-project.ps1 - Chuyen file .exe ve thu muc dich va xoa sach toan bo du an tam.
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -18,9 +18,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host " [Bước 4/4] Lưu file .exe đầu ra và dọn dẹp dự án..." -ForegroundColor Cyan
+Write-Host " [Buoc 4/4] Luu file .exe dau ra va don dep du an..." -ForegroundColor Cyan
 
-# Đảm bảo thư mục đích tồn tại
+# Dam bao thu muc dich ton tai
 if (-not (Test-Path $FinalOutDir)) {
     New-Item -ItemType Directory -Path $FinalOutDir -Force | Out-Null
 }
@@ -29,21 +29,21 @@ $sourceExe = Join-Path $PublishOutDir "$ProjectName.exe"
 $destExe = Join-Path $FinalOutDir "$ProjectName.exe"
 
 if (-not (Test-Path $sourceExe)) {
-    Write-Error "Không tìm thấy file exe nguồn tại: $sourceExe"
+    Write-Error "Khong tim thay file exe nguon tai: $sourceExe"
     exit 1
 }
 
-# Đóng tiến trình cũ nếu đang chạy để ghi đè file exe thành công
+# Dong tien trinh cu neu dang chay de ghi de file exe thanh cong
 $runningProcs = Get-Process -Name $ProjectName -ErrorAction SilentlyContinue
 if ($runningProcs) {
-    Write-Host "  -> Phát hiện $ProjectName đang chạy, đang dừng để cập nhật file mới..." -ForegroundColor Yellow
+    Write-Host "  -> Phat hien $ProjectName dang chay, dang dung de cap nhat file moi..." -ForegroundColor Yellow
     foreach ($p in $runningProcs) {
         try { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } catch { }
     }
     Start-Sleep -Milliseconds 1000
 }
 
-# Sao chép file exe vào thư mục kết quả cuối cùng (thử lại tối đa 3 lần nếu file bị delay unlock)
+# Sao chep file exe vao thu muc ket qua cuoi cung (thu lai toi da 3 lan neu file bi delay unlock)
 $copied = $false
 for ($i = 0; $i -lt 3; $i++) {
     try {
@@ -59,15 +59,15 @@ if (-not $copied) {
     Copy-Item -Path $sourceExe -Destination $destExe -Force
 }
 
-Write-Host "  -> Đã lưu Launcher .exe vào: $destExe" -ForegroundColor Green
+Write-Host "  -> Da luu Launcher .exe vao: $destExe" -ForegroundColor Green
 
-# Xóa bỏ thư mục publish tạm
+# Xoa bo thu muc publish tam
 if (Test-Path $PublishOutDir) {
     Remove-Item -Path $PublishOutDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-# Xóa bỏ hoàn toàn thư mục dự án tạm thời (chỉ giữ lại file exe đầu ra)
-Write-Host "  -> Đang xóa thư mục dự án tạm thời: $TempDir" -ForegroundColor DarkGray
+# Xoa bo hoan toan thu muc du an tam thoi (chi giu lai file exe dau ra)
+Write-Host "  -> Dang xoa thu muc du an tam thoi: $TempDir" -ForegroundColor DarkGray
 for ($i = 0; $i -lt 3; $i++) {
     try {
         if (Test-Path $TempDir) {
@@ -80,9 +80,9 @@ for ($i = 0; $i -lt 3; $i++) {
 }
 
 if (-not (Test-Path $TempDir)) {
-    Write-Host "  -> Đã dọn dẹp sạch sẽ toàn bộ mã nguồn tạm, chỉ giữ lại file exe." -ForegroundColor Green
+    Write-Host "  -> Da don dep sach se toan bo ma nguon tam, chi giu lai file exe." -ForegroundColor Green
 } else {
-    Write-Host "  -> Lưu ý: Chưa xóa được hoàn toàn thư mục tạm (có thể file đang bị khóa bởi tiến trình khác)." -ForegroundColor Yellow
+    Write-Host "  -> Luu y: Chua xoa duoc hoan toan thu muc tam (co the file dang bi khoa boi tien trinh khac)." -ForegroundColor Yellow
 }
 
 exit 0
