@@ -46,7 +46,7 @@ def png_large(tmp_path):
 
 @pytest.fixture
 def jpeg_file(tmp_path):
-    """File JPEG hợp lệ nhưng SAI định dạng đầu vào theo hợp đồng converter."""
+    """File JPEG hợp lệ — tool Xuất ảnh chấp nhận mọi ảnh đọc được."""
     path = tmp_path / "notpng.jpg"
     img = Image.new("RGB", (100, 100), (10, 20, 30))
     img.save(path, format="JPEG")

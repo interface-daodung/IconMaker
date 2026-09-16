@@ -9,7 +9,6 @@ nam trong thu muc app, vi di chuyen app se hong icon.
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -143,55 +142,3 @@ def set_folder_icon(folder_path: str | Path, icon_path: str | Path) -> str:
     _run_attrib("+r", str(folder))
     refresh_explorer_cache()
     return str(ini)
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m service.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]"""
-    from core.file_utils import newest_file
-    from core.paths import OUTPUT_ICONS
-
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(errors="replace")
-    args = [a for a in list(sys.argv[1:] if argv is None else argv) if a]
-    store: str | None = None
-    new_name: str | None = None
-    for flag, slot in (("--store", "store"), ("--name", "new_name")):
-        if flag in args:
-            idx = args.index(flag)
-            if idx + 1 >= len(args):
-                print(f"Lỗi: {flag} cần giá trị kèm theo", file=sys.stderr)
-                return 2
-            if slot == "store":
-                store = args[idx + 1]
-            else:
-                new_name = args[idx + 1]
-            del args[idx : idx + 2]
-    if len(args) == 2:
-        icon_arg, folder = args
-    elif len(args) == 1:
-        latest = newest_file(OUTPUT_ICONS, ".ico")
-        if latest is None:
-            print(
-                f"Lỗi: chưa có ICO nào trong {OUTPUT_ICONS}"
-                " — chạy icons trước hoặc truyền <icon.ico>",
-                file=sys.stderr,
-            )
-            return 1
-        icon_arg, folder = str(latest), args[0]
-    else:
-        print("Dùng: python -m service.foldericon [icon.ico] <thu_muc> [--store <dir>] [--name <ten>]")
-        return 2
-    try:
-        installed = install_icon(icon_arg, store, new_name)
-        ini = set_folder_icon(folder, installed)
-    except (ValueError, FileNotFoundError, RuntimeError, OSError) as exc:
-        print(f"Lỗi: {exc}", file=sys.stderr)
-        return 1
-    print(f"Icon đã cài: {installed}\ndesktop.ini: {ini}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -360,26 +360,3 @@ def process_file(
         sprite.save(out_path)
         written.append(out_path)
     return written
-
-
-def main(argv: list[str] | None = None) -> int:
-    import sys
-
-    from core.paths import INPUT_DIR, OUTPUT_SPRITES
-
-    args = [a for a in (sys.argv[1:] if argv is None else argv) if a]
-    input_dir = Path(args[0]) if args else INPUT_DIR
-    out_dir = Path(args[1]) if len(args) > 1 else OUTPUT_SPRITES
-    files = sorted(f for f in input_dir.iterdir() if f.suffix.lower() == ".png")
-    if not files:
-        print(f"Không có file PNG nào trong {input_dir}", file=sys.stderr)
-        return 1
-    for f in files:
-        written = process_file(f, out_dir)
-        names = ", ".join(p.name for p in written)
-        print(f"{f.name}: {len(written)} sprite -> {out_dir / f.stem}\n    {names}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

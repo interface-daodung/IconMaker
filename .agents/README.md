@@ -44,42 +44,23 @@ Kho tài liệu điều hướng và plan cho các agent làm việc trong dự 
 | Đặt icon thư mục (desktop.ini) | 007 | ✅ (12 test foldericon + 1 test GUI, 71/71 pass) |
 | Tái cấu trúc MVP + bo góc | 008 | ✅ (layout src/, GUI 5 tab, input/ → output/<tool>/, 95/95 pass) |
 | Tạo Junction Point | 009 | ✅ (mklink /J + attrib +r /l, tab Junction, 145/145 pass) |
-| Xuất ảnh hợp nhất (gộp PNG→ICO + Đổi định dạng) | — | ✅ (service/export.py + tools/export_tool, radio jpg/png/webp/ico → output/export/, 191/191 pass) |
-| Build Launcher (tab GUI theo launcher/README.md) | 003 (mục bổ sung) | ✅ (service/launcher.py + tools/launcher_tool, cài icon `<ten>.ico` vào thư viện rồi gọi build-launcher.ps1 → output/launchers/, 203/203 pass) |
+| Xuất ảnh hợp nhất (gộp PNG→ICO + Đổi định dạng) | — | ✅ (service/export.py + tools/export_tool, radio jpg/png/webp/ico → output/export/, 185/185 pass) |
+| Build Launcher (tab GUI theo launcher/README.md) | 003 (mục bổ sung) | ✅ (service/launcher.py + tools/launcher_tool, cài icon `<ten>.ico` vào thư viện rồi gọi build-launcher.ps1 → output/launchers/) |
+| GUI thuần, bỏ CLI (chỉ `make run` + `make cls`) | — | ✅ (xóa `main()`/`__main__` khỏi service, `src/main.py` tự bootstrap sys.path cho shortcut pythonw) |
 
 ## Cách chạy
 
-Khuyến nghị dùng `make` (cài qua winget `ezwinports.make`):
+App là GUI thuần — chạy bằng `make run` (hoặc shortcut `pythonw "…\src\main.py"`):
 
 ```powershell
-make all        # install + test + sprites + icons
-make test       # pytest
-make gui        # mo GUI truc tiep bang pythonw (khong console)
-make new-launcher NAME=<TenApp>  # sinh launcher moi theo khung tray-clone
-make rounded RSRC=in.png RDEST=out.png RADIUS=64  # bo goc anh
-make resize RSRC=in.png EXT=.png     # resize vuong 16/48/128 -> output/resize/
-make export SRC=in.png FMT=.ico QUALITY=100  # xuat anh 1 vao -> jpg/png/webp/ico -> output/export/
-make foldericon ICON=... FOLDER=...   # đặt icon cho thư mục
-  make junction JLINK=<duong-dan-ao> JTARGET=<thu-muc-that>   # tao junction point + attrib +r /l (JNO=1 de bo +r)
-  make build-launcher SERVER=<thu-muc-server> ICON=...ico LNAME=<ten> [MODE=framework|standalone]  # build exe tray -> output/launchers/
-  make help       # danh sách target
+make run        # mo GUI (pythonw, khong console)
+make cls        # xoa cache (__pycache__, .pytest_cache)
 ```
 
-Thủ công (không cần make — chạy từ thư mục gốc, đặt PYTHONPATH=src):
+Chạy tay (không cần make):
 
 ```powershell
 pip install -r requirements.txt
-$env:PYTHONPATH = "src"
-python -m pytest                                  # test
-pythonw src/main.py                               # GUI
-python -m service.convert                        # CLI convert: input/ -> output/convert/
-python -m service.image_ops --radius 64          # CLI bo goc: input/ -> output/rounded/
-python -m service.resize                          # CLI resize 16/48/128: input/ -> output/resize/
-python -m service.export --fmt .ico --quality 100   # CLI xuat anh 1 vao -> jpg/png/webp/ico: input/ -> output/export/
-python -m service.sprites                        # tach sprite: input/ -> output/sprites/
-python -m service.icons                          # build ICO: output/sprites/ -> output/icons/
-python -m service.foldericon C:\path\thu-muc     # đặt icon thư mục (ICO mới nhất output/icons/)
-python -m service.junction C:\ao\link D:\that\folder   # tạo junction + attrib +r /l (--no-readonly để bỏ +r)
-python -m service.launcher C:\Users\inter\Project\Demo --icon out.ico --name Demo --mode framework  # build exe tray -> output/launchers/
-dotnet build launcher/IconMakerLauncher -c Release                # build khung launcher (template)
+pythonw "C:\Users\inter\Project\MyHub\IconMaker\src\main.py"   # GUI — chay tu bat ky cwd nao
+python -m pytest                                              # test (pythonpath=src trong pytest.ini)
 ```

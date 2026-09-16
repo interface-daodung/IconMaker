@@ -78,23 +78,3 @@ def build_from_sprites(
         name = f"{rel.parent.name}-{rel.stem}.ico" if rel.parent != Path(".") else f"{rel.stem}.ico"
         written.append(Path(sprite_to_ico(png, out_root / name, sizes)))
     return written
-
-
-def main(argv: list[str] | None = None) -> int:
-    import sys
-
-    from core.paths import OUTPUT_ICONS, OUTPUT_SPRITES
-
-    args = [a for a in (sys.argv[1:] if argv is None else argv) if a]
-    sprites_dir = Path(args[0]) if args else OUTPUT_SPRITES
-    icon_dir = Path(args[1]) if len(args) > 1 else OUTPUT_ICONS
-    written = build_from_sprites(sprites_dir, icon_dir)
-    if not written:
-        print(f"Không có sprite PNG nào trong {sprites_dir}", file=sys.stderr)
-        return 1
-    print(f"{len(written)} icon -> {icon_dir}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

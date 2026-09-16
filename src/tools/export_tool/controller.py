@@ -7,14 +7,8 @@ from pathlib import Path
 from PIL import Image
 
 from service import convert, export
-from service.export import (
-    DEFAULT_FMT,
-    DEFAULT_QUALITY,
-    EXPORT_FORMATS,
-    clamp_quality,
-    compressed_preview,
-    normalize_export_fmt,
-)
+from service.export import DEFAULT_FMT, DEFAULT_QUALITY, EXPORT_FORMATS, normalize_export_fmt
+from service.format_convert import clamp_quality, compressed_preview
 
 ALL_SIZES_LABEL = "Tất cả"
 

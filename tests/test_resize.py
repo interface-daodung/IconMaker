@@ -114,28 +114,9 @@ def test_resize_names_and_sizes():
     assert len(RESIZE_SIZES) == len(RESIZE_NAMES)
 
 
-def test_resize_cli_main(tmp_path, monkeypatch, capsys):
+def test_resize_default_out_dir_is_output_resize(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     src = _make(tmp_path / "cli.png")
-    assert resize.main([src]) == 0
-    out = tmp_path / "output" / "resize"
-    assert (out / "icon16.png").is_file()
-    assert (out / "icon48.png").is_file()
-    assert (out / "icon128.png").is_file()
-    capsys.readouterr()
-
-
-def test_resize_cli_defaults(tmp_path, monkeypatch, capsys):
-    monkeypatch.chdir(tmp_path)
-    assert resize.main([]) == 1
-    (tmp_path / "input").mkdir()
-    _make(tmp_path / "input" / "test.png")
-    assert resize.main([]) == 0
-    assert (tmp_path / "output" / "resize" / "icon16.png").is_file()
-    capsys.readouterr()
-
-
-def test_resize_cli_invalid_ext(tmp_path, capsys):
-    src = _make(tmp_path / "a.png")
-    assert resize.main([src, "--ext"]) == 2
-    capsys.readouterr()
+    results = resize_image_file(src)
+    assert Path(results[0]) == Path("output") / "resize" / "icon16.png"
+    assert (tmp_path / "output" / "resize" / "icon128.png").is_file()

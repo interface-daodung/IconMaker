@@ -13,8 +13,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-USAGE = "Dùng: python -m service.junction <duong_dan_ao> <duong_dan_that> [--no-readonly]"
-
 
 def validate_junction_paths(
     link: str | Path, target: str | Path
@@ -92,30 +90,3 @@ def create_junction(
     if readonly:
         set_link_readonly(link_p)
     return link_p
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m service.junction <duong_dan_ao> <duong_dan_that>"""
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(errors="replace")
-    args = [a for a in list(sys.argv[1:] if argv is None else argv) if a]
-    readonly = True
-    if "--no-readonly" in args:
-        args.remove("--no-readonly")
-        readonly = False
-    if len(args) != 2:
-        print(USAGE)
-        return 2
-    try:
-        created = create_junction(args[0], args[1], readonly)
-    except (ValueError, FileExistsError, FileNotFoundError, RuntimeError, OSError) as exc:
-        print(f"Lỗi: {exc}", file=sys.stderr)
-        return 1
-    print(f"Junction đã tạo: {created}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

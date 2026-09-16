@@ -6,7 +6,6 @@ import pytest
 from PIL import Image
 
 from core.exceptions import BadImageError, MissingFileError
-from service import export
 from service.export import export_file, normalize_export_fmt
 
 
@@ -71,20 +70,9 @@ def test_export_bad_extension_raises(tmp_path):
         export_file(txt, fmt=".jpg")
 
 
-def test_export_cli_defaults_to_input_output_export(tmp_path, monkeypatch, capsys):
+def test_export_default_dir_is_output_export(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    assert export.main([]) == 1
-    (tmp_path / "input").mkdir()
-    _make(tmp_path / "input" / "t.png")
-    assert export.main([]) == 0
-    assert (tmp_path / "output" / "export" / "t.ico").is_file()
-    capsys.readouterr()
-
-
-def test_export_cli_fmt_and_quality(tmp_path, monkeypatch, capsys):
-    monkeypatch.chdir(tmp_path)
-    src = _make(tmp_path / "cli.png")
-    assert export.main([src, "--fmt", ".webp", "--quality", "70"]) == 0
-    assert (tmp_path / "output" / "export" / "cli.webp").is_file()
-    assert export.main([src, "--fmt", ".gif"]) == 1
-    capsys.readouterr()
+    src = _make(tmp_path / "t.png")
+    out = export_file(src)
+    assert out == str(Path("output") / "export" / "t.ico")
+    assert Path(out).is_file()

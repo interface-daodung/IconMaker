@@ -20,10 +20,6 @@ from service import foldericon
 DEFAULT_SERVER_ROOT = Path(r"C:\Users\inter\Project")
 BUILD_MODES = ("framework", "standalone")
 DEFAULT_MODE = "framework"
-USAGE = (
-    "Dùng: python -m service.launcher <thu_muc_server> "
-    "[--icon <file.ico>] [--name <ten>] [--out <dir>] [--mode framework|standalone]"
-)
 
 _INVALID_NAME_CHARS = set('<>:"/\\|?*')
 
@@ -210,42 +206,3 @@ def run_build(
             raise RuntimeError(f"Build xong nhưng không thấy file: {exe}")
         return str(resolved)
     return str(exe)
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m service.launcher <server> [--icon] [--name] [--out] [--mode]"""
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(errors="replace")
-    args = [a for a in list(sys.argv[1:] if argv is None else argv) if a]
-    opts: dict[str, str] = {}
-    rest: list[str] = []
-    i = 0
-    while i < len(args):
-        if args[i] in ("--icon", "--name", "--out", "--mode") and i + 1 < len(args):
-            opts[args[i]] = args[i + 1]
-            i += 2
-        else:
-            rest.append(args[i])
-            i += 1
-    if len(rest) != 1:
-        print(USAGE)
-        return 2
-    try:
-        exe = run_build(
-            rest[0],
-            opts.get("--icon"),
-            opts.get("--name"),
-            opts.get("--out"),
-            opts.get("--mode", DEFAULT_MODE),
-        )
-    except (ValueError, FileNotFoundError, RuntimeError, OSError) as exc:
-        print(f"Lỗi: {exc}", file=sys.stderr)
-        return 1
-    print(f"Launcher đã build: {exe}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

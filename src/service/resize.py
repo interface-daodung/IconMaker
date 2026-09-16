@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
 from core.exceptions import BadImageError, MissingFileError
-from core.file_utils import ensure_parent_dir, first_image
+from core.file_utils import ensure_parent_dir
 from core.formats import READABLE_IMAGE_EXTENSIONS
-from core.paths import INPUT_DIR, OUTPUT_RESIZE
+from core.paths import OUTPUT_RESIZE
 
 RESIZE_SIZES = [16, 48, 128]
 RESIZE_NAMES = ["icon16", "icon48", "icon128"]
@@ -68,46 +67,3 @@ def resize_image_file(
         results.append(str(dest))
     img.close()
     return results
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Entry point: python -m service.resize [nguon] [--ext .png]
-
-    Mặc định: nguồn = ảnh đầu tiên trong input/.
-    """
-    args = [a for a in list(sys.argv[1:] if argv is None else argv) if a]
-    ext = DEFAULT_FORMAT
-    if "--ext" in args:
-        idx = args.index("--ext")
-        if idx + 1 >= len(args):
-            print("Lỗi: --ext cần đuôi file kèm theo (vd: .png)", file=sys.stderr)
-            return 2
-        ext = args[idx + 1]
-        del args[idx : idx + 2]
-    if len(args) > 1:
-        print("Dùng: python -m service.resize [nguon] [--ext .png]")
-        return 2
-    if args:
-        source = args[0]
-    else:
-        found = first_image(INPUT_DIR)
-        if found is None:
-            print(
-                f"Lỗi: không có ảnh nào trong {INPUT_DIR}"
-                " — đặt ảnh vào đó hoặc truyền <nguon>",
-                file=sys.stderr,
-            )
-            return 1
-        source = str(found)
-    try:
-        results = resize_image_file(source, ext=ext)
-        for p in results:
-            print(p)
-    except (BadImageError, MissingFileError, OSError) as exc:
-        print(f"Lỗi: {exc}", file=sys.stderr)
-        return 1
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

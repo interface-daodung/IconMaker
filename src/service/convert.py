@@ -1,4 +1,4 @@
-"""Lõi chuyển đổi PNG -> ICO bằng Pillow. Không phụ thuộc Tkinter/CLI."""
+"""Lõi chuyển đổi ảnh -> ICO đa size bằng Pillow. Không phụ thuộc Tkinter."""
 
 from __future__ import annotations
 
@@ -93,75 +93,3 @@ def convert_image_to_ico(
             frame.close()
 
     return str(dest_path)
-
-
-def convert_png_to_ico(
-    source: str | Path,
-    dest: str | Path,
-    sizes: list[int] | None = None,
-) -> str:
-    """Chuyển file PNG `source` thành file ICO `dest`.
-
-    - Ảnh vào phải là PNG đọc được; RGB sẽ được thêm kênh alpha (RGBA).
-    - Mỗi kích thước trong `sizes` sẽ được resize (kể cả upscale) bằng LANCZOS
-      và ghi đủ vào một file .ico duy nhất.
-    - Tạo thư mục cha của `dest` nếu chưa tồn tại.
-    - Trả về đường dẫn file ICO đã ghi.
-    """
-    src = Path(source)
-    if not src.is_file():
-        raise FileNotFoundError(f"Không tìm thấy file nguồn: {src}")
-
-    try:
-        with Image.open(src) as img:
-            if img.format != "PNG":
-                raise ValueError(
-                    f"File nguồn phải là PNG, nhận được {img.format or 'không rõ định dạng'}"
-                )
-    except UnidentifiedImageError as exc:
-        raise ValueError(f"Không đọc được ảnh (hỏng hoặc không phải ảnh): {src}") from exc
-
-    return convert_image_to_ico(src, dest, sizes)
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Entry point dòng lệnh: python -m service.convert [nguon.png] [dich.ico] [sizes...]
-
-    Mặc định: nguồn = PNG đầu tiên trong input/, đích = output/convert/<tên>.ico.
-    """
-    import sys
-
-    from core.file_utils import first_image
-    from core.formats import PNG_EXTENSIONS
-    from core.paths import INPUT_DIR, OUTPUT_CONVERT
-
-    args = [a for a in (sys.argv[1:] if argv is None else argv) if a]
-    if len(args) > 8:
-        print(f"Dùng: {sys.argv[0]} [nguon.png] [dich.ico] [kích_thước...]")
-        print(f"Mặc định: nguồn={INPUT_DIR}/*.png, đích={OUTPUT_CONVERT}/, sizes={DEFAULT_SIZES}")
-        return 2
-    if args:
-        source = args[0]
-    else:
-        found = first_image(INPUT_DIR, PNG_EXTENSIONS)
-        if found is None:
-            print(
-                f"Lỗi: không có PNG nào trong {INPUT_DIR}"
-                " — đặt ảnh vào đó hoặc truyền <nguon.png>",
-                file=sys.stderr,
-            )
-            return 1
-        source = str(found)
-    dest = args[1] if len(args) >= 2 else str(OUTPUT_CONVERT / (Path(source).stem + ".ico"))
-    try:
-        sizes = [int(a) for a in args[2:]] or None
-        out = convert_png_to_ico(source, dest, sizes)
-    except (ValueError, FileNotFoundError) as exc:
-        print(f"Lỗi: {exc}", file=sys.stderr)
-        return 1
-    print(out)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

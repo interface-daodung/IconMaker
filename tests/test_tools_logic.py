@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from core.file_utils import resolve_output_path
 from gui.base_tool import ToolTab
 from gui.theme import next_theme
 from service import convert, foldericon
@@ -26,16 +25,6 @@ def test_parse_sizes_single_value():
 def test_parse_sizes_invalid_raises():
     with pytest.raises(ValueError):
         parse_sizes("abc")
-
-
-def test_resolve_output_path_next_to_source_when_no_dir():
-    out = resolve_output_path(r"C:\pics\logo.png")
-    assert out == str(Path(r"C:\pics") / "logo.ico")
-
-
-def test_resolve_output_path_custom_ext_and_dir():
-    out = resolve_output_path("logo.png", "out_dir", ".png")
-    assert out == str(Path("out_dir") / "logo.png")
 
 
 def test_run_conversion_creates_file(tmp_path, png_rgb):

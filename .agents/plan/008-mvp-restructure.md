@@ -6,6 +6,12 @@ vào `src/`, CLI mặc định `input/` → `output/<tenTool>/` (xem "Layout src
 **Bổ sung 2026-09-14 — tách service + tools package (117/117 test pass):**
 `core/` chỉ giữ share, logic riêng dời sang `service/`, mỗi tool thành
 package `view.py` + `controller.py` (xem "Layout mới" dưới).
+**Bổ sung 2026-09-16 — app GUI thuần, bỏ CLI (185/185 test pass):** xóa toàn
+bộ `main()`/`__main__` khỏi `service/*` cùng các hàm/hằng chỉ CLI dùng;
+`Makefile` còn `run` + `cls`; `src/main.py` tự thêm `src/` vào `sys.path` và
+neo cwd về gốc project nên shortcut `pythonw "…/src/main.py"` chạy được từ
+bất kỳ đâu. Mọi mục "CLI" trong plan 001–009 nay đọc là **hàm service** (GUI
+là lối vào duy nhất).
 
 ## Mục tiêu
 
@@ -29,7 +35,8 @@ src/
 - `controller.py` cấm import GUI/customtkinter, chỉ parse input + gọi `service/`
   → test được không cần mở cửa sổ (`tools.*.controller`).
 - `view.py` (Tab) chỉ hiển thị, gọi `controller.*` + `core.paths` prefill.
-- `service/` được gọi qua CLI `python -m service.*`, `Makefile` đã chuyển từ `core.*` sang.
+- `service/` là logic thuần (không `main()`/`__main__`), GUI gọi qua controller;
+  app không có CLI, chạy bằng `make run`.
 - `__init__.py` mỗi tool re-export `Tab` + hàm controller để `registry.py` và code cũ vẫn chạy.
 
 ## Layout src/ (2026-09-14 — thay layout gốc, `git mv` giữ history)
@@ -41,17 +48,15 @@ src/
   gui/                     # chỉ hiển thị
   tools/                   # mỗi tool 1 tab + run_*
 tests/                     # giữ ở gốc; pytest.ini đã có pythonpath=src
-input/                     # đầu vào mặc định của tool qua CLI (bỏ trống tham số)
-output/<tool>/             # đầu ra: convert/ rounded/ sprites/ icons/
+input/                     # đầu vào mặc định của tool (GUI prefill)
+output/<tool>/             # đầu ra: export/ rounded/ resize/ sprites/ icons/ launchers/
 ```
 
-- Import giữ nguyên (`core.*`, `gui.*`, `tools.*`); chạy từ gốc với
-  `PYTHONPATH=src` (Makefile `export` sẵn; `python src/main.py` tự có src trong sys.path).
-- CLI thiếu tham số → lấy mặc định (`convert`: PNG đầu tiên trong `input/` →
-  `output/convert/`; `image_ops` tương tự → `output/rounded/`; `sprites`:
-  `input/` → `output/sprites/`; `icons`: `output/sprites/` → `output/icons/`;
-  `foldericon`: ICO mới nhất `output/icons/`, thư mục đích bắt buộc).
-  Không có input → báo lỗi yêu cầu điền rõ, như GUI.
+- Import giữ nguyên (`core.*`, `gui.*`, `tools.*`); test chạy với `pythonpath=src`
+  (trong `pytest.ini`); `pythonw "…/src/main.py"` tự thêm `src/` vào `sys.path`
+  và neo cwd về gốc project nên shortcut chạy được từ bất kỳ đâu.
+- Mọi thao tác đi qua GUI; `input/` là đầu vào mặc định prefill sẵn, `output/<tool>/`
+  là nơi lưu. Không còn nhánh CLI "bỏ trống tham số → lấy mặc định".
 - GUI prefill sẵn các đường dẫn trên (hàng thư mục; `rounded` lưu vào
   `output/rounded/`); `foldericon` vẫn bắt chọn cả 2 như cũ.
 - Launcher C# dò `src/main.py` (`AppConfig.CommandArgs`, `FindAppRoot`).
@@ -88,6 +93,5 @@ assets/icons|styles/     # tài nguyên tĩnh (hiện chỉ có README giữ ch�
 ## Ghi chú triển khai
 
 - Bo góc bằng Pillow (`rounded_rectangle` mask + `ImageChops.darker` giữ alpha gốc), không cần scipy.
-- `make rounded RSRC=... RDEST=... RADIUS=...` gọi `python -m service.image_ops`
-  (PYTHONPATH=src do Makefile export; bỏ trống RSRC/RDEST = dùng input/ → output/rounded/).
 - Launcher dò `src/main.py`, chạy `pythonw src/main.py`.
+- `make run` = `pythonw src/main.py`, `make cls` = xóa cache; không còn target pipeline.
